@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Trazo: juego de dibujo online con impostor para 5 a 10 amigos</title>
+    <meta
+      name="description"
+      content="Juego de dibujo online y gratis para 5 a 10 amigos: cada uno añade un trazo al mismo dibujo y hay que descubrir quién no sabe la palabra. Sin descargas."
+    />
+    <link rel="canonical" href="https://trazo.deiviperdomo.dev/" />
+    <meta name="theme-color" content="#efe7d6" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Trazo" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://trazo.deiviperdomo.dev/" />
+    <meta property="og:title" content="Trazo: dibujad juntos y descubrid al impostor" />
+    <meta
+      property="og:description"
+      content="Un trazo por turno sobre el mismo dibujo. Uno de vosotros no sabe qué se está dibujando. Gratis, online, de 5 a 10 jugadores."
+    />
+    <meta property="og:image" content="https://trazo.deiviperdomo.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Trazo, juego de dibujo online con impostor" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Trazo",
+        "url": "https://trazo.deiviperdomo.dev/",
+        "description": "Juego de dibujo online para 5 a 10 jugadores: cada uno añade un trazo al mismo dibujo y hay que descubrir quién no sabe la palabra.",
+        "applicationCategory": "GameApplication",
+        "genre": "Juego de fiesta",
+        "operatingSystem": "Cualquiera (navegador web)",
+        "inLanguage": "es",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Contenido de portada en HTML estático: visible sin esperar al JavaScript y legible para buscadores.
+         Se oculta al entrar en una sala (body.in-room, ver src/index.css). -->
+    <header class="landing mx-auto max-w-md px-4 pt-10 text-center">
+      <svg class="mx-auto h-14 w-28 text-accent" viewBox="0 0 112 56" fill="none" aria-hidden="true">
+        <path
+          d="M8 40C22 4 34 52 48 26S66 8 78 30s18 6 26-12"
+          stroke="currentColor"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <h1 class="mt-2 text-5xl font-black tracking-tight">Trazo</h1>
+      <p class="mt-3 text-lg text-muted">
+        Dibujad juntos, un trazo por turno. Uno de vosotros no sabe qué se está dibujando.
+      </p>
+    </header>
+
+    <div id="root"></div>
+
+    <section class="landing mx-auto max-w-md px-4 pt-4 pb-12" aria-labelledby="como-se-juega">
+      <h2 id="como-se-juega" class="text-xl font-bold">Cómo se juega</h2>
+      <ol class="mt-3 list-decimal space-y-2 pl-5 text-muted">
+        <li>Crea una sala y comparte el código: de 5 a 10 jugadores, cada uno con su móvil.</li>
+        <li>En cada ronda, un jugador elige una categoría y una palabra secreta. Ese jugador no dibuja.</li>
+        <li>Todos los demás reciben la palabra… menos uno: el falso artista, que solo ve una X.</li>
+        <li>Por turnos, cada artista añade <strong>un solo trazo</strong> al mismo dibujo. Se dan dos vueltas.</li>
+        <li>A la de tres, todos votan a la vez quién creen que es el falso artista.</li>
+        <li>Si lo pillan, aún puede ganar la ronda adivinando la palabra. Gana la partida quien llegue a 5 puntos.</li>
+      </ol>
+      <h2 class="mt-8 text-xl font-bold">Qué necesitas</h2>
+      <p class="mt-3 text-muted">
+        Solo el navegador: no hay que instalar nada ni registrarse. Se juega hablando, en la misma habitación o por
+        llamada, mientras el dibujo aparece en directo en la pantalla de todos.
+      </p>
+    </section>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+/* Identidad: papel, tinta y rotuladores. Sin fuentes externas (pila del sistema). */
+@theme {
+  --color-desk: #efe7d6;
+  --color-paper: #fbf7ee;
+  --color-ink: #1f2328;
+  --color-muted: #5a5447;
+  --color-line: #d6cbb2;
+  --color-accent: #c2410c;
+  --color-ok: #2b8a3e;
+  --font-sans: ui-rounded, 'SF Pro Rounded', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    /* Sin "tirar para recargar" ni rebote: molestan al dibujar. */
+    overscroll-behavior: none;
+  }
+  body {
+    background: var(--color-desk);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.in-room .landing {
+    display: none;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold select-none;
+    @apply transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply bg-ink text-paper;
+  }
+  .btn-accent {
+    @apply bg-accent text-white;
+  }
+  .btn-ghost {
+    @apply border-line bg-paper text-ink border;
+  }
+  .input {
+    /* 16px: iOS no hace zoom al enfocar */
+    @apply border-line text-ink min-h-12 w-full rounded-lg border bg-white px-3 text-base;
+  }
+  .card {
+    @apply border-line bg-paper rounded-xl border p-4;
+  }
+  .label {
+    @apply text-muted mb-1 block text-sm font-semibold;
+  }
+}
+
+/* La pizarra: cuadrado más grande que quepa en su hueco. */
+.board-slot {
+  container-type: size;
+}
+.board {
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  touch-action: none; /* el navegador no hace scroll ni zoom mientras se dibuja */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

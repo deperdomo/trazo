@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trazo",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/parties/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "Room", "class_name": "Room" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "vars": {
+    // Mínimo de jugadores para empezar (las reglas dicen 5). En local se baja en .dev.vars.
+    "MIN_PLAYERS": "5",
+    // URL de PostgREST en Oracle (ver infra/README.md). Vacía = se juega sin guardar datos.
+    "DB_URL": ""
+  }
+  // Secreto: DB_KEY (wrangler secret put DB_KEY)
+}

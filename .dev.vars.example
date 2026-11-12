@@ -1,0 +1,9 @@
+# Copia este archivo a .dev.vars para desarrollo local (no se sube a git).
+
+# Permite probar con menos jugadores de los 5 que piden las reglas.
+MIN_PLAYERS=3
+
+# Base de datos (opcional). Sin estas dos líneas se juega igual, pero no se guarda nada
+# ni aparece la lista de salas abiertas. Ver infra/README.md.
+# DB_URL=http://localhost:3010
+# DB_KEY=<jwt generado con infra/README.md>

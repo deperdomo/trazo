@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /parties/
+
+Sitemap: https://trazo.deiviperdomo.dev/sitemap.xml
