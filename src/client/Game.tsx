@@ -93,8 +93,12 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
   };
 
   const phase = { view, send };
+  // Sin pizarra (el QM eligiendo palabra) el panel es una tarjeta más y la página hace scroll normal.
+  const hasBoard = view.phase !== 'setup';
   return (
-    <main className="mx-auto flex h-dvh max-w-xl flex-col gap-2 px-2 pt-2">
+    <main
+      className={`mx-auto flex max-w-xl flex-col gap-2 px-2 pt-2 ${hasBoard ? 'h-dvh' : 'min-h-dvh pb-[max(0.5rem,env(safe-area-inset-bottom))]'}`}
+    >
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
           <h1 className="truncate text-xl font-black">{view.category || 'Preparando la ronda'}</h1>
@@ -105,15 +109,19 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
 
       <PlayerStrip view={view} drawerId={drawerId} />
 
-      {view.phase !== 'setup' && (
+      {hasBoard && (
         <div className="board-slot flex min-h-0 flex-1 items-start justify-center">
           <Board model={room.board} colors={colors} me={view.you} canDraw={myTurn} send={send} />
         </div>
       )}
 
-      {/* Hoja inferior pegada al borde: lo que toca hacer queda al alcance del pulgar. */}
+      {/* Con pizarra: hoja inferior pegada al borde, al alcance del pulgar. */}
       <section
-        className="card -mx-2 mt-auto max-h-[50dvh] shrink-0 overflow-y-auto rounded-b-none border-b-0 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className={
+          hasBoard
+            ? 'card -mx-2 mt-auto max-h-[50dvh] shrink-0 overflow-y-auto rounded-b-none border-b-0 pb-[max(1rem,env(safe-area-inset-bottom))]'
+            : 'card'
+        }
         aria-live="polite"
       >
         {view.phase === 'setup' && <Setup {...phase} />}
