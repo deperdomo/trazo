@@ -15,7 +15,7 @@
     // Mínimo de jugadores para empezar (las reglas dicen 5). En local se baja en .dev.vars.
     "MIN_PLAYERS": "5",
     // URL de PostgREST en Oracle (ver infra/README.md). Vacía = se juega sin guardar datos.
-    "DB_URL": ""
+    "DB_URL": "https://bd-juegos.deiviperdomo.dev"
   }
   // Secreto: DB_KEY (wrangler secret put DB_KEY)
 }

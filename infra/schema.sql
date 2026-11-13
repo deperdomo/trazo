@@ -1,17 +1,13 @@
--- Esquema de Trazo. Se ejecuta solo, una vez, al crear la base de datos (docker-entrypoint-initdb.d).
-\getenv pg_password POSTGRES_PASSWORD
+-- Tablas de Trazo en la instancia compartida "bd-juegos" (Postgres + PostgREST en Oracle).
+-- Copia de referencia: el fichero que se aplica es ~/proyectos/bd-juegos/sql/trazo.sql en el servidor.
+-- Idempotente. Los cambios de columnas se añaden al final con: alter table ... add column if not exists ...
 
--- Roles de PostgREST:
---   authenticator: con el que se conecta; solo puede cambiar a uno de los otros dos.
---   anon:          peticiones sin clave. No tiene permisos sobre nada.
---   trazo_api:     peticiones con la clave del Worker (JWT con "role": "trazo_api").
-create role authenticator noinherit login password :'pg_password';
-create role anon nologin;
-create role trazo_api nologin;
-grant anon, trazo_api to authenticator;
+-- Rol de las peticiones con la clave del Worker (JWT con "role": "trazo_api").
+select 'create role trazo_api nologin' where not exists (select from pg_roles where rolname = 'trazo_api') \gexec
+grant trazo_api to authenticator;
 
 -- Salas vivas: alimenta la lista de "salas abiertas". La fila se borra al cerrarse la sala.
-create table trazo_rooms (
+create table if not exists trazo_rooms (
   code         text primary key check (code ~ '^[A-Z0-9]{6}$'),
   status       text not null default 'waiting' check (status in ('waiting', 'playing')),
   host_name    text not null,
@@ -21,7 +17,7 @@ create table trazo_rooms (
 );
 
 -- Historial: una fila por ronda terminada, con el dibujo.
-create table trazo_rounds (
+create table if not exists trazo_rounds (
   id           bigint generated always as identity primary key,
   room_code    text not null,
   round_number int  not null,
