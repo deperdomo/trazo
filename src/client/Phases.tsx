@@ -72,7 +72,7 @@ export function Drawing({ view, send }: PhaseProps) {
   return (
     <div className="flex flex-col gap-2">
       {drawerId === view.you ? (
-        <p className="text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo.</p>
+        <p className="text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo, y envíalo con ✓.</p>
       ) : (
         <p className="text-lg">
           Dibuja <Who view={view} id={drawerId} />

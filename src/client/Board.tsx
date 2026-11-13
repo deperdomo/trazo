@@ -1,6 +1,7 @@
 // La pizarra. El dibujo NO pasa por el estado de React: los puntos llegan a un modelo mutable
 // y el canvas se repinta en requestAnimationFrame solo cuando algo cambia.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, Undo2 } from 'lucide-react';
 import { getStroke } from 'perfect-freehand';
 import { BOARD, MAX_STROKE_POINTS, type Stroke } from '../shared/game';
 
@@ -70,6 +71,9 @@ export default function Board(props: Props) {
   const latest = useRef(props);
   latest.current = props;
   const { model } = props;
+  // Trazo terminado pero sin enviar: se confirma con ✓ o se deshace con la flecha.
+  const draftRef = useRef<number[] | null>(null);
+  const [draft, setDraft] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -148,9 +152,11 @@ export default function Board(props: Props) {
     };
     const up = (e: PointerEvent) => {
       if (e.pointerId !== active?.pointer) return;
-      // El trazo se queda pintado como "en curso" hasta que el servidor lo confirma.
-      latest.current.send({ t: 'stroke', p: active.pts });
+      // Los demás ven el trazo completo, pero no cuenta hasta que se confirma con ✓.
+      if (active.pts.length > active.sent) latest.current.send({ t: 'pts', p: active.pts.slice(active.sent) });
+      draftRef.current = active.pts;
       active = null;
+      setDraft(true);
       invalidate();
     };
     const cancel = (e: PointerEvent) => {
@@ -182,13 +188,46 @@ export default function Board(props: Props) {
   // Cambian los colores (o el turno): repintar.
   useEffect(() => model.onChange(), [model, props.colors]);
 
+  // Si el turno se acaba sin confirmar (p. ej. se cancela la ronda), el borrador desaparece.
+  useEffect(() => {
+    if (props.canDraw) return;
+    draftRef.current = null;
+    setDraft(false);
+  }, [props.canDraw]);
+
+  const confirm = () => {
+    if (!draftRef.current) return;
+    // Se queda pintado como "en curso" hasta que el servidor lo confirma.
+    props.send({ t: 'stroke', p: draftRef.current });
+    draftRef.current = null;
+    setDraft(false);
+  };
+  const undo = () => {
+    draftRef.current = null;
+    setDraft(false);
+    model.clearLive();
+    props.send({ t: 'cancel' });
+  };
+
   return (
-    <canvas
-      ref={canvasRef}
-      role="img"
-      aria-label="Pizarra compartida con el dibujo de la ronda"
-      className="board border-line rounded-lg border-2 bg-white"
-      style={props.canDraw ? { borderColor: props.colors[props.me], cursor: 'crosshair' } : undefined}
-    />
+    <div className="relative">
+      <canvas
+        ref={canvasRef}
+        role="img"
+        aria-label="Pizarra compartida con el dibujo de la ronda"
+        className="board border-line rounded-lg border-2 bg-white"
+        style={props.canDraw ? { borderColor: props.colors[props.me], cursor: 'crosshair' } : undefined}
+      />
+      {draft && (
+        <div className="absolute right-3 bottom-3 flex gap-3">
+          <button className="btn btn-ghost bg-paper size-14 rounded-full p-0 shadow-lg" onClick={undo} aria-label="Deshacer el trazo">
+            <Undo2 className="size-7" aria-hidden="true" />
+          </button>
+          <button className="btn btn-primary size-14 rounded-full p-0 shadow-lg" onClick={confirm} aria-label="Enviar el trazo">
+            <Check className="size-8" aria-hidden="true" strokeWidth={3} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
