@@ -1,27 +1,26 @@
 @import 'tailwindcss';
 
-/* Identidad: papel sobre tapete de corte, tinta y rotuladores.
-   Títulos en Shantell Sans (letra de rotulador, OFL, autoalojada); el resto, pila del sistema. */
+/* Identidad "Subrayador": amarillo de rotulador fluorescente, papel blanco y tinta negra; rojo solo para avisos.
+   Una sola familia: Outfit (OFL, variable, autoalojada). */
 @font-face {
-  font-family: 'Shantell Sans';
-  src: url('./fonts/shantell-sans-800-latin.woff2') format('woff2');
-  font-weight: 700 900; /* un solo archivo 800: sirve para bold y black sin negrita sintética */
+  font-family: 'Outfit';
+  src: url('./fonts/outfit-latin.woff2') format('woff2');
+  font-weight: 100 900;
   font-display: swap;
 }
 
 @theme {
-  --color-desk: #b5d3be; /* tapete: tinta 9.8:1, muted 5.15:1, foco naranja 3.2:1 */
-  --color-grid: rgb(31 77 55 / 0.08);
-  --color-grid-major: rgb(31 77 55 / 0.16);
-  --color-paper: #fbf7ee;
-  --color-ink: #1f2328;
-  --color-muted: #41524a; /* tinta verdosa: 7.8:1 sobre papel */
-  --color-line: #cfd8cc;
-  --color-hint: #7a7262; /* placeholders: 4.76:1 sobre blanco */
-  --color-accent: #c2410c;
-  --color-ok: #2b8a3e;
-  --font-sans: ui-rounded, 'SF Pro Rounded', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  --font-display: 'Shantell Sans', var(--font-sans);
+  --color-desk: #ffd84d; /* fondo: tinta 13.3:1, muted 7.3:1 */
+  --color-paper: #ffffff;
+  --color-ink: #141414;
+  --color-muted: #4a4130; /* 10:1 sobre blanco */
+  --color-line: #141414; /* bordes marcados de tarjetas, campos y pizarra */
+  --color-soft: #e6e1d0; /* separadores dentro de una tarjeta */
+  --color-chip: #fff1b8;
+  --color-hint: #6f6650; /* placeholders: 5.7:1 sobre blanco */
+  --color-accent: #c0261b; /* avisos y errores: 5.9:1 sobre blanco */
+  --color-ok: #1e7a34;
+  --font-sans: 'Outfit', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 @layer base {
@@ -31,33 +30,20 @@
     overscroll-behavior: none;
   }
   body {
-    /* Cuadrícula de tapete de corte: 24px, con línea mayor cada 5. */
-    background-color: var(--color-desk);
-    background-image:
-      linear-gradient(var(--color-grid-major) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-grid-major) 1px, transparent 1px),
-      linear-gradient(var(--color-grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
-    background-size:
-      120px 120px,
-      120px 120px,
-      24px 24px,
-      24px 24px;
-    background-position: center top;
+    background: var(--color-desk);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
-    caret-color: var(--color-accent);
-    accent-color: var(--color-accent);
-    scrollbar-color: var(--color-line) transparent;
+    caret-color: var(--color-ink);
+    accent-color: var(--color-ink);
+    scrollbar-color: var(--color-ink) transparent;
   }
   ::selection {
-    background: var(--color-accent);
-    color: white;
+    background: var(--color-ink);
+    color: var(--color-desk);
   }
   h1,
   h2 {
-    font-family: var(--font-display);
     text-wrap: balance;
   }
   p,
@@ -72,34 +58,35 @@
     min-height: 450px;
   }
   :focus-visible {
-    outline: 3px solid var(--color-accent);
+    outline: 3px solid var(--color-ink);
     outline-offset: 2px;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold select-none;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-base font-bold select-none;
     @apply transition-[transform,background-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  /* Acción principal: negro con texto amarillo. */
+  .btn-accent {
+    @apply bg-ink text-desk enabled:hover:bg-ink/85;
   }
   .btn-primary {
     @apply bg-ink text-paper enabled:hover:bg-ink/85;
   }
-  .btn-accent {
-    @apply bg-accent text-white enabled:hover:bg-accent/90;
-  }
   .btn-ghost {
-    @apply border-line bg-paper text-ink border enabled:hover:bg-white;
+    @apply border-line bg-paper text-ink border-[1.5px] enabled:hover:bg-chip;
   }
   .input {
     /* 16px: iOS no hace zoom al enfocar */
-    @apply border-line text-ink placeholder:text-hint min-h-12 w-full rounded-lg border bg-white px-3 text-base;
+    @apply border-line text-ink placeholder:text-hint min-h-12 w-full rounded-xl border-[1.5px] bg-white px-3 text-base;
   }
   .card {
-    @apply border-line bg-paper rounded-xl border p-4;
+    @apply border-line bg-paper rounded-2xl border-[1.5px] p-4;
   }
   .label {
-    @apply text-muted mb-1 block font-sans text-sm font-semibold;
+    @apply text-muted mb-1 block text-sm font-semibold;
   }
 }
 

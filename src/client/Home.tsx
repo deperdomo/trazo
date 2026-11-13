@@ -100,7 +100,7 @@ export default function Home({ notice, initialCode, onEnter }: Props) {
       )}
       {initialCode && !notice && (
         <p className="card" role="status">
-          Te han invitado a la sala <strong className="font-mono tracking-wider">{initialCode}</strong>. Escribe tu nombre y entra.
+          Te han invitado a la sala <strong className="tracking-wider">{initialCode}</strong>. Escribe tu nombre y entra.
         </p>
       )}
 
@@ -140,7 +140,7 @@ export default function Home({ notice, initialCode, onEnter }: Props) {
         <div className="flex gap-2">
           <input
             id="code"
-            className="input font-mono text-xl tracking-[0.3em] uppercase"
+            className="input text-xl font-semibold tracking-[0.3em] uppercase tabular-nums"
             value={code}
             onChange={(e) => {
               setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6));

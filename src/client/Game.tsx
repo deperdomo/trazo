@@ -57,12 +57,12 @@ function PlayerStrip({ view, drawerId }: { view: View; drawerId: string | null }
         <li
           key={p.id}
           className={`flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-sm ${
-            p.id === drawerId ? 'border-ink bg-paper font-bold' : 'bg-paper/70 border-transparent'
+            p.id === drawerId ? 'border-ink bg-ink text-paper font-bold' : 'border-line bg-paper'
           }`}
         >
           <Dot color={p.color} />
           <span className="max-w-24 truncate">{p.name}</span>
-          {p.id === view.qmId && <span className="bg-ink text-paper rounded px-1 text-xs font-bold">QM</span>}
+          {p.id === view.qmId && <span className="bg-desk text-ink rounded px-1 text-xs font-bold">QM</span>}
           {!p.connected && <WifiOff className="size-3.5" aria-label="desconectado" />}
           <span className="text-muted tabular-nums">
             {p.score}
@@ -94,7 +94,7 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
 
   const phase = { view, send };
   return (
-    <main className="mx-auto flex h-dvh max-w-xl flex-col gap-2 p-2">
+    <main className="mx-auto flex h-dvh max-w-xl flex-col gap-2 px-2 pt-2">
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
           <h1 className="truncate text-xl font-black">{view.category || 'Preparando la ronda'}</h1>
@@ -111,19 +111,22 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
         </div>
       )}
 
-      <section className="card max-h-[50dvh] shrink-0 overflow-y-auto" aria-live="polite">
+      {/* Hoja inferior pegada al borde: lo que toca hacer queda al alcance del pulgar. */}
+      <section
+        className="card -mx-2 mt-auto max-h-[50dvh] shrink-0 overflow-y-auto rounded-b-none border-b-0 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        aria-live="polite"
+      >
         {view.phase === 'setup' && <Setup {...phase} />}
         {view.phase === 'drawing' && <Drawing {...phase} />}
         {view.phase === 'voting' && <Voting {...phase} />}
         {view.phase === 'guess' && <Guess {...phase} />}
         {view.phase === 'result' && <Result {...phase} />}
+        {view.you === view.hostId && view.phase !== 'result' && (
+          <button className="text-muted mt-2 min-h-11 w-full text-sm underline" onClick={abort}>
+            Cancelar la ronda
+          </button>
+        )}
       </section>
-
-      {view.you === view.hostId && view.phase !== 'result' && (
-        <button className="text-muted min-h-11 self-center px-3 text-sm underline" onClick={abort}>
-          Cancelar la ronda
-        </button>
-      )}
     </main>
   );
 }

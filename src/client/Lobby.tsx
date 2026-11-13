@@ -35,8 +35,8 @@ export default function Lobby({ room, view, onLeave }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4">
       <header className="card text-center">
-        <h1 className="text-muted font-sans text-sm font-semibold">Sala de espera · código</h1>
-        <p className="mt-1 font-mono text-5xl font-black tracking-[0.2em]">{view.code}</p>
+        <h1 className="text-muted text-sm font-semibold">Sala de espera · código</h1>
+        <p className="mt-1 text-5xl font-extrabold tracking-[0.15em] tabular-nums">{view.code}</p>
         <button className="btn btn-ghost mt-3 w-full" onClick={share}>
           {copied ? <Check className="size-5" aria-hidden="true" /> : <Share2 className="size-5" aria-hidden="true" />}
           {copied ? 'Enlace copiado' : 'Invitar con un enlace'}
@@ -62,7 +62,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
         <h2 id="players-title" className="label">
           Jugadores ({view.players.length}/{MAX_PLAYERS})
         </h2>
-        <ul className="divide-line divide-y">
+        <ul className="divide-soft divide-y">
           {view.players.map((p) => (
             <li key={p.id} className="flex min-h-12 items-center gap-3">
               <Dot color={p.color} className="size-5" />
@@ -75,7 +75,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
               {p.id === view.hostId && <Crown className="text-accent size-5" aria-label="Anfitrión" />}
               {isHost && p.id !== view.you && (
                 <button
-                  className="text-muted hover:bg-desk hover:text-ink grid size-11 place-items-center rounded-lg"
+                  className="text-muted hover:bg-chip hover:text-ink grid size-11 place-items-center rounded-lg"
                   onClick={() => room.send({ t: 'kick', id: p.id })}
                   aria-label={`Sacar a ${p.name} de la sala`}
                 >
@@ -117,7 +117,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
         </div>
       </section>
 
-      <footer className="mt-auto flex flex-col gap-2 pb-2">
+      <footer className="mt-auto flex flex-col gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {isHost ? (
           <>
             <button className="btn btn-accent w-full" onClick={() => room.send({ t: 'start' })} disabled={missing > 0}>
