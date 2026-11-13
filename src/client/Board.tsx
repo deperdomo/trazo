@@ -5,7 +5,9 @@ import { getStroke } from 'perfect-freehand';
 import { BOARD, MAX_STROKE_POINTS, type Stroke } from '../shared/game';
 
 // Ajustes del rotulador, en unidades de pizarra (lado = 1000). Afinar probando en móvil real.
-const PEN = { size: 11, thinning: 0.4, smoothing: 0.5, streamline: 0.4 };
+// size: grosor (1,6 % del lado). thinning: cuánto adelgaza con la velocidad/presión (0 = grosor fijo).
+// streamline: cuánto suaviza el pulso (más = trazo más limpio, pero sigue al dedo con algo de retraso).
+const PEN = { size: 16, thinning: 0.25, smoothing: 0.5, streamline: 0.4 };
 const MIN_DIST = 1.5; // separación mínima entre puntos guardados
 const SEND_EVERY = 40; // ms entre lotes del trazo en vivo
 const PAPER = '#fffdf8';

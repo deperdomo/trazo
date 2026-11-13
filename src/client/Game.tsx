@@ -52,11 +52,11 @@ function CardPeek({ view }: { view: View }) {
 
 function PlayerStrip({ view, drawerId }: { view: View; drawerId: string | null }) {
   return (
-    <ul className="flex gap-1.5 overflow-x-auto pb-1" aria-label="Jugadores y puntos">
+    <ul className="flex flex-wrap gap-1.5" aria-label="Jugadores y puntos">
       {view.players.map((p) => (
         <li
           key={p.id}
-          className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2 py-1 text-sm ${
+          className={`flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-sm ${
             p.id === drawerId ? 'border-ink bg-paper font-bold' : 'border-line'
           }`}
         >
@@ -109,7 +109,7 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
       <PlayerStrip view={view} drawerId={drawerId} />
 
       {view.phase !== 'setup' && (
-        <div className="board-slot grid min-h-0 flex-1 place-items-center">
+        <div className="board-slot flex min-h-0 flex-1 items-start justify-center">
           <Board model={room.board} colors={colors} me={view.you} canDraw={myTurn} send={send} />
         </div>
       )}
