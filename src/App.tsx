@@ -5,6 +5,9 @@ import { Loading } from './client/ui';
 
 // La sala (pizarra, WebSocket, pantallas de juego) se descarga solo al entrar: la portada carga lo mínimo.
 const RoomScreen = lazy(() => import('./client/RoomScreen'));
+// /demo: las pantallas reales con jugadores simulados, para revisar el diseño sin montar una partida.
+const Demo = lazy(() => import('./client/Demo'));
+const isDemo = location.pathname === '/demo';
 
 /** Si algo revienta al pintar, un mensaje y un botón en vez de una pantalla en blanco. */
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -40,8 +43,8 @@ export default function App() {
   const [code, setCode] = useState(codeFromUrl);
 
   useEffect(() => {
-    document.body.classList.toggle('in-room', !!session);
-    document.title = session ? `Sala ${session.code} · Trazo` : 'Trazo: juego de dibujo online con impostor para 5 a 10 amigos';
+    document.body.classList.toggle('in-room', !!session || isDemo);
+    document.title = isDemo ? 'Demo · Trazo' : session ? `Sala ${session.code} · Trazo` : 'Trazo: juego de dibujo online con impostor para 5 a 10 amigos';
   }, [session]);
 
   useEffect(() => {
@@ -66,7 +69,11 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      {session ? (
+      {isDemo ? (
+        <Suspense fallback={<Loading text="Cargando la demo…" />}>
+          <Demo />
+        </Suspense>
+      ) : session ? (
         <Suspense fallback={<Loading text="Entrando en la sala…" />}>
           <RoomScreen key={session.code + session.mode} session={session} onExit={exit} />
         </Suspense>
