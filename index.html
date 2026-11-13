@@ -67,6 +67,18 @@
 
     <section class="landing mx-auto max-w-md px-4 pt-4 pb-12" aria-labelledby="como-se-juega">
       <h2 id="como-se-juega" class="text-xl font-bold">Cómo se juega</h2>
+      <!-- Vídeo tutorial (vertical, 9:16). Se genera en video/ con HyperFrames: cd video && npm run render -->
+      <video
+        class="border-line bg-ink mt-3 aspect-[9/16] w-full rounded-2xl border-[1.5px]"
+        src="/tutorial.mp4"
+        poster="/tutorial-poster.jpg"
+        width="720"
+        height="1280"
+        controls
+        playsinline
+        preload="none"
+        aria-label="Vídeo: cómo se juega a Trazo en 40 segundos"
+      ></video>
       <ol class="mt-3 list-decimal space-y-2 pl-5 text-muted">
         <li>Crea una sala y comparte el código: de 5 a 10 jugadores, cada uno con su móvil.</li>
         <li>En cada ronda, un jugador elige una categoría y una palabra secreta. Ese jugador no dibuja.</li>

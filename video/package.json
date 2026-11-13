@@ -1,0 +1,12 @@
+{
+  "name": "video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.9.41 preview",
+    "check": "npx --yes hyperframes@0.9.41 check",
+    "render": "node sound.mjs && npx --yes hyperframes@0.9.41 render -o renders/tutorial.mp4 && npm run web",
+    "publish": "npx --yes hyperframes@0.9.41 publish",
+    "web": "ffmpeg -y -i renders/tutorial.mp4 -vf scale=720:1280 -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart ../public/tutorial.mp4 && ffmpeg -y -ss 3.3 -i renders/tutorial.mp4 -frames:v 1 -vf scale=720:1280 -q:v 4 ../public/tutorial-poster.jpg"
+  }
+}
