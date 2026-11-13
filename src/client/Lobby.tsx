@@ -70,12 +70,12 @@ export default function Lobby({ room, view, onLeave }: Props) {
                 {p.name}
                 {p.id === view.you && <span className="text-muted font-normal"> (tú)</span>}
               </span>
-              {hasScores && <span className="text-muted text-sm">{p.score} pts</span>}
+              {hasScores && <span className="text-muted text-sm tabular-nums">{p.score} pts</span>}
               {!p.connected && <WifiOff className="text-muted size-4" aria-label="Desconectado" />}
               {p.id === view.hostId && <Crown className="text-accent size-5" aria-label="Anfitrión" />}
               {isHost && p.id !== view.you && (
                 <button
-                  className="text-muted grid size-11 place-items-center rounded-lg"
+                  className="text-muted hover:bg-desk hover:text-ink grid size-11 place-items-center rounded-lg"
                   onClick={() => room.send({ t: 'kick', id: p.id })}
                   aria-label={`Sacar a ${p.name} de la sala`}
                 >
@@ -100,7 +100,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
               aria-label={COLOR_NAMES[i] + (takenColors.has(i) ? ' (cogido)' : '')}
               disabled={takenColors.has(i)}
               onClick={() => room.send({ t: 'color', c: i })}
-              className={`grid aspect-square min-h-11 place-items-center rounded-lg disabled:opacity-20 ${
+              className={`grid aspect-square min-h-11 place-items-center rounded-lg disabled:cursor-not-allowed disabled:opacity-40 ${
                 me.color === i ? 'ring-ink ring-offset-paper ring-4 ring-offset-2' : ''
               }`}
               style={{ background: hex }}
@@ -110,6 +110,8 @@ export default function Lobby({ room, view, onLeave }: Props) {
                   <Check className="size-5" aria-hidden="true" />
                 </span>
               )}
+              {/* Cogido: con la X no se confunde con un tono pastel libre */}
+              {takenColors.has(i) && <X className="text-ink size-6" strokeWidth={3} aria-hidden="true" />}
             </button>
           ))}
         </div>

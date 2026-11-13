@@ -7,6 +7,7 @@
   --color-ink: #1f2328;
   --color-muted: #5a5447;
   --color-line: #d6cbb2;
+  --color-hint: #7a7262; /* placeholders: 4.76:1 sobre blanco */
   --color-accent: #c2410c;
   --color-ok: #2b8a3e;
   --font-sans: ui-rounded, 'SF Pro Rounded', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -23,6 +24,21 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
+    caret-color: var(--color-accent);
+    accent-color: var(--color-accent);
+    scrollbar-color: var(--color-line) transparent;
+  }
+  ::selection {
+    background: var(--color-accent);
+    color: white;
+  }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  p,
+  li {
+    text-wrap: pretty;
   }
   body.in-room .landing {
     display: none;
@@ -40,20 +56,20 @@
 @layer components {
   .btn {
     @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold select-none;
-    @apply transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45;
+    @apply transition-[transform,background-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45;
   }
   .btn-primary {
-    @apply bg-ink text-paper;
+    @apply bg-ink text-paper enabled:hover:bg-ink/85;
   }
   .btn-accent {
-    @apply bg-accent text-white;
+    @apply bg-accent text-white enabled:hover:bg-accent/90;
   }
   .btn-ghost {
-    @apply border-line bg-paper text-ink border;
+    @apply border-line bg-paper text-ink border enabled:hover:bg-white;
   }
   .input {
     /* 16px: iOS no hace zoom al enfocar */
-    @apply border-line text-ink min-h-12 w-full rounded-lg border bg-white px-3 text-base;
+    @apply border-line text-ink placeholder:text-hint min-h-12 w-full rounded-lg border bg-white px-3 text-base;
   }
   .card {
     @apply border-line bg-paper rounded-xl border p-4;

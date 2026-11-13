@@ -97,11 +97,8 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
     <main className="mx-auto flex h-dvh max-w-xl flex-col gap-2 p-2">
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
-          <p className="text-muted text-xs font-semibold tracking-wide uppercase">
-            Ronda {view.round}
-            {view.category && ' · categoría'}
-          </p>
           <h1 className="truncate text-xl font-black">{view.category || 'Preparando la ronda'}</h1>
+          <p className="text-muted text-sm">{view.category ? `Categoría · ronda ${view.round}` : `Ronda ${view.round}`}</p>
         </div>
         {view.card && <CardPeek view={view} />}
       </header>
