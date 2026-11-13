@@ -27,6 +27,10 @@
   body.in-room .landing {
     display: none;
   }
+  /* Reserva el alto del formulario de portada (450px medidos) para que "Cómo se juega" no salte al cargar el JS. */
+  body:not(.in-room) #root {
+    min-height: 450px;
+  }
   :focus-visible {
     outline: 3px solid var(--color-accent);
     outline-offset: 2px;
