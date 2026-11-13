@@ -11,6 +11,9 @@
     "bindings": [{ "name": "Room", "class_name": "Room" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // Solo el dominio propio: sin URL duplicada en workers.dev.
+  "workers_dev": false,
+  "preview_urls": false,
   "routes": [{ "pattern": "trazo.deiviperdomo.dev", "custom_domain": true }],
   "vars": {
     // Mínimo de jugadores para empezar (las reglas dicen 5). En local se baja en .dev.vars.
