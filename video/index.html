@@ -189,7 +189,7 @@
         flex-direction: column;
         align-items: center;
         gap: 10px;
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 700;
       }
       .av i {
@@ -481,7 +481,7 @@
           <div class="count"><b>3</b><b>2</b><b>1</b></div>
           <div class="people voters"></div>
           <div class="stamp">¡Pillado!</div>
-          <p class="cap">Dani era el <b>falso artista</b></p>
+          <p class="cap">Abraham era el <b>falso artista</b></p>
         </div>
       </section>
 
@@ -525,7 +525,7 @@
 
       // ── Contenido generado ────────────────────────────────────────────────
       // Los mismos rotuladores que el juego (COLORS en src/shared/game.ts). Ana propone la palabra; el resto dibuja.
-      const PLAYERS = [['Ana', '#1f2328'], ['Beto', '#e03131'], ['Cris', '#1971c2'], ['Dani', '#2f9e44'], ['Eva', '#f08c00'], ['Fran', '#7048e8']];
+      const PLAYERS = [['Ana', '#1f2328'], ['Jibsan', '#e03131'], ['Alaina', '#1971c2'], ['Abraham', '#2f9e44'], ['Cindel', '#f08c00'], ['Deivi', '#7048e8']];
       const ARTISTS = PLAYERS.slice(1);
       const people = (sel, list) =>
         ($(sel).innerHTML = list.map(([n, c]) => `<div class="av"><i style="background:${c}">${n[0]}</i><span>${n}</span></div>`).join(''));
@@ -548,7 +548,7 @@
       }).join(' ');
       $('.stars').innerHTML = `<svg viewBox="0 0 100 100"><polygon points="${star}"/></svg>`.repeat(5);
 
-      // La jirafa de /demo (src/client/Demo.tsx), un trazo por turno. Los turnos 2 y 7 son de Dani, que no sabe la palabra.
+      // La jirafa de /demo (src/client/Demo.tsx), un trazo por turno. Los turnos 2 y 7 son de Abraham, que no sabe la palabra.
       const line = (x1, y1, x2, y2) => (t) => [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
       const oval = (cx, cy, rx, ry) => (t) => [cx + rx * Math.cos(6.4 * t), cy + ry * Math.sin(6.4 * t)];
       const SHAPES = [
