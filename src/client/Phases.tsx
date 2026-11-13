@@ -72,7 +72,7 @@ export function Drawing({ view, send }: PhaseProps) {
   return (
     <div className="flex flex-col gap-2">
       {drawerId === view.you ? (
-        <p className="text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo, y envíalo con ✓.</p>
+        <p className="font-display text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo, y envíalo con ✓.</p>
       ) : (
         <p className="text-lg">
           Dibuja <Who view={view} id={drawerId} />
@@ -131,7 +131,7 @@ export function Voting({ view, send }: PhaseProps) {
     );
   }
   if (count) {
-    return <p className="py-4 text-center text-7xl font-black tabular-nums">{count}</p>;
+    return <p className="font-display py-4 text-center text-7xl font-black tabular-nums">{count}</p>;
   }
   return (
     <div className="flex flex-col gap-3">

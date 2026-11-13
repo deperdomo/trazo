@@ -35,7 +35,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4">
       <header className="card text-center">
-        <h1 className="text-muted text-sm font-semibold">Sala de espera · código</h1>
+        <h1 className="text-muted font-sans text-sm font-semibold">Sala de espera · código</h1>
         <p className="mt-1 font-mono text-5xl font-black tracking-[0.2em]">{view.code}</p>
         <button className="btn btn-ghost mt-3 w-full" onClick={share}>
           {copied ? <Check className="size-5" aria-hidden="true" /> : <Share2 className="size-5" aria-hidden="true" />}

@@ -1,16 +1,27 @@
 @import 'tailwindcss';
 
-/* Identidad: papel, tinta y rotuladores. Sin fuentes externas (pila del sistema). */
+/* Identidad: papel sobre tapete de corte, tinta y rotuladores.
+   Títulos en Shantell Sans (letra de rotulador, OFL, autoalojada); el resto, pila del sistema. */
+@font-face {
+  font-family: 'Shantell Sans';
+  src: url('./fonts/shantell-sans-800-latin.woff2') format('woff2');
+  font-weight: 700 900; /* un solo archivo 800: sirve para bold y black sin negrita sintética */
+  font-display: swap;
+}
+
 @theme {
-  --color-desk: #efe7d6;
+  --color-desk: #b5d3be; /* tapete: tinta 9.8:1, muted 5.15:1, foco naranja 3.2:1 */
+  --color-grid: rgb(31 77 55 / 0.08);
+  --color-grid-major: rgb(31 77 55 / 0.16);
   --color-paper: #fbf7ee;
   --color-ink: #1f2328;
-  --color-muted: #5a5447;
-  --color-line: #d6cbb2;
+  --color-muted: #41524a; /* tinta verdosa: 7.8:1 sobre papel */
+  --color-line: #cfd8cc;
   --color-hint: #7a7262; /* placeholders: 4.76:1 sobre blanco */
   --color-accent: #c2410c;
   --color-ok: #2b8a3e;
   --font-sans: ui-rounded, 'SF Pro Rounded', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: 'Shantell Sans', var(--font-sans);
 }
 
 @layer base {
@@ -20,7 +31,19 @@
     overscroll-behavior: none;
   }
   body {
-    background: var(--color-desk);
+    /* Cuadrícula de tapete de corte: 24px, con línea mayor cada 5. */
+    background-color: var(--color-desk);
+    background-image:
+      linear-gradient(var(--color-grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-grid-major) 1px, transparent 1px),
+      linear-gradient(var(--color-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+    background-size:
+      120px 120px,
+      120px 120px,
+      24px 24px,
+      24px 24px;
+    background-position: center top;
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
@@ -34,6 +57,7 @@
   }
   h1,
   h2 {
+    font-family: var(--font-display);
     text-wrap: balance;
   }
   p,
@@ -75,7 +99,7 @@
     @apply border-line bg-paper rounded-xl border p-4;
   }
   .label {
-    @apply text-muted mb-1 block text-sm font-semibold;
+    @apply text-muted mb-1 block font-sans text-sm font-semibold;
   }
 }
 

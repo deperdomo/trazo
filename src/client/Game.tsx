@@ -57,7 +57,7 @@ function PlayerStrip({ view, drawerId }: { view: View; drawerId: string | null }
         <li
           key={p.id}
           className={`flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-sm ${
-            p.id === drawerId ? 'border-ink bg-paper font-bold' : 'border-line'
+            p.id === drawerId ? 'border-ink bg-paper font-bold' : 'bg-paper/70 border-transparent'
           }`}
         >
           <Dot color={p.color} />

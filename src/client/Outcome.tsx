@@ -40,7 +40,7 @@ export function Guess({ view, send }: PhaseProps) {
   };
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xl font-black">
+      <p className="font-display text-xl font-black">
         ¡Pillado! <Who view={view} id={fakeId} /> era el falso artista.
       </p>
       <Tally view={view} />
@@ -95,7 +95,7 @@ export function Result({ view, send }: PhaseProps) {
       : '¡Pillado! Ganan los artistas';
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xl font-black">{headline}</p>
+      <p className="font-display text-xl font-black">{headline}</p>
       <p>
         El falso artista era <Who view={view} id={fakeId} /> y la palabra, <strong>«{view.word}»</strong>.
         {view.guess && !view.guessed && <> Dijo «{view.guess}».</>}
@@ -116,7 +116,7 @@ export function Result({ view, send }: PhaseProps) {
         </ol>
       </div>
       {gameOver && (
-        <p className="flex items-center gap-2 text-xl font-black">
+        <p className="font-display flex items-center gap-2 text-xl font-black">
           <Trophy className="text-accent size-6 shrink-0" aria-hidden="true" />
           {view.winners.length > 1 ? 'Ganan ' : 'Gana '}
           {view.winners.map((id) => view.players.find((p) => p.id === id)?.name).join(' y ')}
