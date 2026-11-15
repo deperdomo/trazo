@@ -43,7 +43,7 @@ function build(scene: Scene): G.Room {
   if (scene === 'Sala de espera') return room;
   G.startGame(room, 'p0', MIN_PLAYERS);
   if (scene === 'Elegir palabra') return room;
-  G.setup(room, 'p0', 'Animales', 'Jirafa', 'p1', () => 0.5); // el falso artista es Dani (p3)
+  G.setup(room, 'p0', 'Animales', 'Jirafa', () => 0.5); // el falso artista es Dani (p3), que también empieza
   const strokes = scene === 'Dibujando' ? 4 : room.order.length * G.LAPS;
   for (let turn = 0; turn < strokes; turn++) G.addStroke(room, G.currentDrawer(room)!, points(turn), turn % G.COLORS.length);
   if (scene === 'Dibujando' || scene === 'Votación') return room;
@@ -62,7 +62,7 @@ function botStep(room: G.Room, me: string, board: BoardModel): boolean {
   switch (room.phase) {
     case 'setup':
       if (qmId === me) return false;
-      G.setup(room, qmId, 'Animales', 'Jirafa', room.players.find((p) => p.id !== qmId)!.id, Math.random);
+      G.setup(room, qmId, 'Animales', 'Jirafa', Math.random);
       return true;
     case 'drawing': {
       const drawer = G.currentDrawer(room)!;
@@ -132,7 +132,7 @@ export default function Demo() {
           error = G.startGame(room, me, MIN_PLAYERS);
           break;
         case 'setup':
-          error = G.setup(room, me, m.category, m.word, m.first, Math.random);
+          error = G.setup(room, me, m.category, m.word, Math.random);
           break;
         case 'skip':
           error = G.skipTurn(room, me);

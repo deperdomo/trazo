@@ -159,7 +159,7 @@ export class Room extends Server<Env> {
         error = G.startGame(room, pid, this.minPlayers);
         break;
       case 'setup':
-        error = G.setup(room, pid, m.category, m.word, m.first, random);
+        error = G.setup(room, pid, m.category, m.word, random);
         break;
       case 'skip':
         error = G.skipTurn(room, pid);

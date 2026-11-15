@@ -5,12 +5,12 @@ import * as G from './game.ts';
 
 const DOT = [500, 500, 0];
 
-/** Sala con n jugadores (p0 anfitrión y QM), ya en fase de dibujo. `fake` es el índice del falso artista entre los artistas. */
+/** Sala con n jugadores (p0 anfitrión y QM), ya en fase de dibujo. `fake` es el índice entre los artistas del falso artista, que además hace el primer trazo. */
 function playing(n = 5, fake = 0, word = 'Jirafa') {
   const room = G.newRoom('ABC123', 'p0', 't0', 'Jugador 0');
   for (let i = 1; i < n; i++) G.addPlayer(room, `p${i}`, `t${i}`, `Jugador ${i}`);
   assert.equal(G.startGame(room, 'p0', 5), undefined);
-  assert.equal(G.setup(room, 'p0', 'Animales', word, 'p2', () => fake / (n - 1)), undefined);
+  assert.equal(G.setup(room, 'p0', 'Animales', word, () => fake / (n - 1)), undefined);
   return room;
 }
 
@@ -28,17 +28,17 @@ function voteAll(room: G.Room, targets: string[]) {
 
 const scores = (room: G.Room) => Object.fromEntries(room.players.map((p) => [p.id, p.score]));
 
-test('dos vueltas de un trazo por turno, empezando por quien elige el QM', () => {
+test('dos vueltas de un trazo por turno, empezando por quien salga en el sorteo', () => {
   const room = playing();
-  assert.deepEqual(room.order, ['p2', 'p3', 'p4', 'p1']);
+  assert.deepEqual(room.order, ['p1', 'p2', 'p3', 'p4']);
   assert.equal(room.fakeId, 'p1');
   assert.equal(G.addStroke(room, 'p3', DOT, 0), 'No es tu turno');
   assert.equal(G.addStroke(room, 'p0', DOT, 0), 'No es tu turno'); // el QM no dibuja
-  assert.equal(G.addStroke(room, 'p2', [1, 2]), 'Trazo no válido');
-  assert.equal(G.addStroke(room, 'p2', [1, 2, 0, 1001, 5, 0]), 'Trazo no válido');
+  assert.equal(G.addStroke(room, 'p1', [1, 2], 0), 'Trazo no válido');
+  assert.equal(G.addStroke(room, 'p1', [1, 2, 0, 1001, 5, 0], 0), 'Trazo no válido');
   drawAll(room);
   assert.equal(room.strokes.length, 8);
-  assert.deepEqual(room.strokes.map((s) => s.id), ['p2', 'p3', 'p4', 'p1', 'p2', 'p3', 'p4', 'p1']);
+  assert.deepEqual(room.strokes.map((s) => s.id), ['p1', 'p2', 'p3', 'p4', 'p1', 'p2', 'p3', 'p4']);
   assert.equal(room.phase, 'voting');
 });
 
@@ -104,7 +104,7 @@ test('el QM rota al siguiente asiento y gana quien llega a 5 puntos', () => {
   assert.equal(room.strokes.length, 0);
 
   // Ronda 2: QM p1, falso p0, no pillado -> p0: 4, p1: 4
-  assert.equal(G.setup(room, 'p1', 'Frutas', 'Pera', 'p0', () => 0), undefined);
+  assert.equal(G.setup(room, 'p1', 'Frutas', 'Pera', () => 0), undefined);
   assert.equal(room.fakeId, 'p0');
   voteAll(room, ['p2', 'p0', 'p0', 'p2']);
   assert.deepEqual(room.winners, []);
@@ -112,7 +112,7 @@ test('el QM rota al siguiente asiento y gana quien llega a 5 puntos', () => {
   assert.equal(room.qmId, 'p2');
 
   // Ronda 3: QM p2, falso p0, no pillado -> p0: 6 gana
-  G.setup(room, 'p2', 'Frutas', 'Uva', 'p0', () => 0);
+  G.setup(room, 'p2', 'Frutas', 'Uva', () => 0);
   voteAll(room, ['p1', 'p0', 'p0', 'p1']);
   assert.deepEqual(scores(room), { p0: 6, p1: 4, p2: 2, p3: 0, p4: 0 });
   assert.deepEqual(room.winners, ['p0']);
@@ -137,9 +137,9 @@ test('sala de espera: nombres y aforo', () => {
 test('turno de un desconectado: el anfitrión puede saltarlo', () => {
   const room = playing();
   room.players.forEach((p) => (p.connected = true));
-  assert.equal(G.skipTurn(room, 'p0'), 'Jugador 2 sigue conectado');
-  room.players[2].connected = false;
+  assert.equal(G.skipTurn(room, 'p0'), 'Jugador 1 sigue conectado');
+  room.players[1].connected = false;
   assert.equal(G.skipTurn(room, 'p3'), 'Solo el anfitrión puede saltar un turno');
   assert.equal(G.skipTurn(room, 'p0'), undefined);
-  assert.equal(G.currentDrawer(room), 'p3');
+  assert.equal(G.currentDrawer(room), 'p2');
 });

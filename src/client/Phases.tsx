@@ -10,12 +10,10 @@ export function Who({ view, id }: { view: View; id: string }) {
   );
 }
 
-/** El QM elige categoría, palabra y quién empieza. El resto espera. */
+/** El QM elige categoría y palabra. El resto espera. */
 export function Setup({ view, send }: PhaseProps) {
-  const artists = view.players.filter((p) => p.id !== view.qmId);
   const [category, setCategory] = useState('');
   const [word, setWord] = useState('');
-  const [first, setFirst] = useState(artists[0]?.id ?? '');
 
   if (view.you !== view.qmId) {
     return (
@@ -27,7 +25,7 @@ export function Setup({ view, send }: PhaseProps) {
   }
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    send({ t: 'setup', category, word, first });
+    send({ t: 'setup', category, word });
   };
   return (
     <form className="flex flex-col gap-3" onSubmit={submit}>
@@ -43,18 +41,6 @@ export function Setup({ view, send }: PhaseProps) {
           Palabra secreta (todos menos el falso artista)
         </label>
         <input id="word" className="input" value={word} onChange={(e) => setWord(e.target.value)} maxLength={TEXT_MAX} placeholder="Jirafa" required autoComplete="off" />
-      </div>
-      <div>
-        <label className="label" htmlFor="first">
-          ¿Quién hace el primer trazo?
-        </label>
-        <select id="first" className="input" value={first} onChange={(e) => setFirst(e.target.value)}>
-          {artists.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
       </div>
       <button className="btn btn-accent">Repartir cartas y empezar</button>
     </form>

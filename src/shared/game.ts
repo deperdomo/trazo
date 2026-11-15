@@ -169,13 +169,12 @@ export function startGame(room: Room, by: string, minPlayers: number): string | 
   room.phase = 'setup';
 }
 
-/** El QM elige categoría, palabra y quién hace el primer trazo. `rand` sortea al falso artista. */
+/** El QM elige categoría y palabra. `rand` sortea al falso artista y quién hace el primer trazo. */
 export function setup(
   room: Room,
   by: string,
   category: unknown,
   word: unknown,
-  firstId: unknown,
   rand: () => number,
 ): string | undefined {
   if (room.phase !== 'setup') return 'Ahora no toca elegir palabra';
@@ -184,11 +183,10 @@ export function setup(
   const w = cleanText(word);
   if (!c || !w) return `Categoría y palabra: entre 1 y ${TEXT_MAX} caracteres`;
   const artists = artistsOf(room);
-  const first = artists.indexOf(firstId as string);
-  if (first < 0) return 'Elige quién hace el primer trazo';
   room.category = c;
   room.word = w;
   room.fakeId = artists[Math.floor(rand() * artists.length)];
+  const first = Math.floor(rand() * artists.length);
   room.order = [...artists.slice(first), ...artists.slice(0, first)];
   room.phase = 'drawing';
 }
