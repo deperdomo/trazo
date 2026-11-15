@@ -1,7 +1,7 @@
 // La pizarra. El dibujo NO pasa por el estado de React: los puntos llegan a un modelo mutable
 // y el canvas se repinta en requestAnimationFrame solo cuando algo cambia.
 import { useEffect, useRef, useState } from 'react';
-import { Check, Undo2 } from 'lucide-react';
+import { Check, Undo2, ZoomOut } from 'lucide-react';
 import { getStroke } from 'perfect-freehand';
 import { BOARD, COLORS, MAX_STROKE_POINTS, type Stroke } from '../shared/game';
 
@@ -12,6 +12,9 @@ const PEN = { size: 16, thinning: 0.25, smoothing: 0.5, streamline: 0.4 };
 const MIN_DIST = 1.5; // separación mínima entre puntos guardados
 const SEND_EVERY = 40; // ms entre lotes del trazo en vivo
 const PAPER = '#fffdf8';
+const GRID = '#e6e0d2'; // cuadrícula tenue: al ampliar, el tamaño de los cuadros da la referencia del zoom
+const GRID_STEP = 50; // lado de cada cuadro en unidades de pizarra (20 x 20 cuadros)
+const MAX_ZOOM = 4; // pellizco con dos dedos: hasta 4 aumentos
 const DIMMED = 0.12; // opacidad de los trazos de los demás al resaltar a un jugador
 
 /** Dibujo compartido: trazos terminados y, como mucho, uno en curso (propio o de otro jugador). */
@@ -76,6 +79,10 @@ export default function Board(props: Props) {
   // Trazo terminado pero sin enviar: se confirma con ✓ o se deshace con la flecha.
   const draftRef = useRef<number[] | null>(null);
   const [draft, setDraft] = useState(false);
+  // Zoom (pellizco con dos dedos): k aumentos y esquina superior izquierda visible, en unidades de pizarra.
+  // Solo cambia cómo se ve en este móvil; los trazos se guardan siempre en coordenadas de pizarra.
+  const zoomRef = useRef({ k: 1, ox: 0, oy: 0 });
+  const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -84,6 +91,9 @@ export default function Board(props: Props) {
     const paths = new WeakMap<Stroke, Path2D>();
     let frame = 0;
     let active: { pointer: number; rect: DOMRect; pts: number[]; sent: number; lastSend: number; pen: boolean } | null = null;
+    // Dedos sobre la pizarra y, con dos, el pellizco: distancia y zoom al empezar, y punto de pizarra bajo el centro.
+    const touches = new Map<number, { x: number; y: number }>();
+    let pinch: { rect: DOMRect; dist: number; k: number; bx: number; by: number } | null = null;
 
     const draw = () => {
       frame = 0;
@@ -97,8 +107,19 @@ export default function Board(props: Props) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = PAPER;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const scale = canvas.width / BOARD;
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      const { k, ox, oy } = zoomRef.current;
+      const scale = (canvas.width / BOARD) * k;
+      ctx.setTransform(scale, 0, 0, scale, -ox * scale, -oy * scale);
+      ctx.beginPath();
+      for (let v = GRID_STEP; v < BOARD; v += GRID_STEP) {
+        ctx.moveTo(v, 0);
+        ctx.lineTo(v, BOARD);
+        ctx.moveTo(0, v);
+        ctx.lineTo(BOARD, v);
+      }
+      ctx.strokeStyle = GRID;
+      ctx.lineWidth = devicePixelRatio / scale; // 1 px de pantalla con cualquier zoom
+      ctx.stroke();
       for (const stroke of model.strokes) {
         let path = paths.get(stroke);
         if (!path) paths.set(stroke, (path = pathOf(stroke.pts, true)));
@@ -123,14 +144,60 @@ export default function Board(props: Props) {
     const addPoint = (e: PointerEvent) => {
       if (!active || active.pts.length >= MAX_STROKE_POINTS * 3) return;
       const { rect, pts } = active;
-      const x = Math.round(clamp(((e.clientX - rect.left) / rect.width) * BOARD, BOARD) * 10) / 10;
-      const y = Math.round(clamp(((e.clientY - rect.top) / rect.height) * BOARD, BOARD) * 10) / 10;
+      const { k, ox, oy } = zoomRef.current;
+      const x = Math.round(clamp(ox + ((e.clientX - rect.left) / rect.width) * (BOARD / k), BOARD) * 10) / 10;
+      const y = Math.round(clamp(oy + ((e.clientY - rect.top) / rect.height) * (BOARD / k), BOARD) * 10) / 10;
       const n = pts.length;
       if (n && Math.hypot(x - pts[n - 3], y - pts[n - 2]) < MIN_DIST) return;
       pts.push(x, y, active.pen ? Math.round(clamp(Math.max(0.05, e.pressure), 1) * 100) / 100 : 0);
     };
 
+    const pinchNow = () => {
+      const [a, b] = [...touches.values()];
+      return { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    };
+    /** Zoom según cuánto se han separado los dedos; el punto que había bajo su centro sigue bajo su centro. */
+    const updatePinch = () => {
+      if (!pinch) return;
+      const { dist, mx, my } = pinchNow();
+      let k = clamp((pinch.k * dist) / pinch.dist, MAX_ZOOM);
+      if (k < 1.05) k = 1; // casi sin zoom: se queda la pizarra entera
+      const side = BOARD / k;
+      zoomRef.current = {
+        k,
+        ox: clamp(pinch.bx - ((mx - pinch.rect.left) / pinch.rect.width) * side, BOARD - side),
+        oy: clamp(pinch.by - ((my - pinch.rect.top) / pinch.rect.height) * side, BOARD - side),
+      };
+      setZoomed(k > 1);
+      invalidate();
+    };
+
     const down = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        canvas.setPointerCapture(e.pointerId);
+        // Segundo dedo: pellizco. Si el primero ya había empezado un trazo, se descarta (no si es de lápiz: es la palma).
+        if (touches.size === 2 && !active?.pen) {
+          e.preventDefault();
+          if (active) {
+            active = null;
+            model.clearLive();
+            latest.current.send({ t: 'cancel' });
+          }
+          const rect = canvas.getBoundingClientRect();
+          const { dist, mx, my } = pinchNow();
+          const { k, ox, oy } = zoomRef.current;
+          pinch = {
+            rect,
+            dist,
+            k,
+            bx: ox + ((mx - rect.left) / rect.width) * (BOARD / k),
+            by: oy + ((my - rect.top) / rect.height) * (BOARD / k),
+          };
+          return;
+        }
+      }
+      if (pinch) return;
       // Un solo trazo: puntero primario, botón principal, y solo si es tu turno y no hay otro trazo pendiente.
       if (!latest.current.canDraw || model.live || active || !e.isPrimary || e.button !== 0) return;
       e.preventDefault();
@@ -142,6 +209,12 @@ export default function Board(props: Props) {
       invalidate();
     };
     const move = (e: PointerEvent) => {
+      const touch = touches.get(e.pointerId);
+      if (touch) {
+        touch.x = e.clientX;
+        touch.y = e.clientY;
+        if (pinch) return updatePinch();
+      }
       if (e.pointerId !== active?.pointer) return;
       // Todas las muestras entre dos frames (hasta 240 Hz), no solo la última.
       const events = e.getCoalescedEvents?.() ?? [];
@@ -154,7 +227,12 @@ export default function Board(props: Props) {
         active.lastSend = now;
       }
     };
+    /** Un dedo deja la pizarra. Con menos de dos se acaba el pellizco; el que quede no dibuja hasta volver a tocar. */
+    const lift = (e: PointerEvent) => {
+      if (touches.delete(e.pointerId) && touches.size < 2) pinch = null;
+    };
     const up = (e: PointerEvent) => {
+      lift(e);
       if (e.pointerId !== active?.pointer) return;
       // Los demás ven el trazo completo, pero no cuenta hasta que se confirma con ✓.
       if (active.pts.length > active.sent) latest.current.send({ t: 'pts', c: latest.current.color, p: active.pts.slice(active.sent) });
@@ -164,6 +242,7 @@ export default function Board(props: Props) {
       invalidate();
     };
     const cancel = (e: PointerEvent) => {
+      lift(e);
       if (e.pointerId !== active?.pointer) return;
       // El sistema interrumpió el gesto (palma, gesto del navegador): no cuenta, se puede repetir.
       active = null;
@@ -216,6 +295,12 @@ export default function Board(props: Props) {
     props.send({ t: 'cancel' });
   };
 
+  const resetZoom = () => {
+    zoomRef.current = { k: 1, ox: 0, oy: 0 };
+    setZoomed(false);
+    model.onChange();
+  };
+
   return (
     <div className="relative">
       <canvas
@@ -225,6 +310,11 @@ export default function Board(props: Props) {
         className="board border-line rounded-lg border-2 bg-white"
         style={props.canDraw ? { borderColor: COLORS[props.color], cursor: 'crosshair' } : undefined}
       />
+      {zoomed && (
+        <button className="btn btn-ghost bg-paper absolute top-3 left-3 size-11 rounded-full p-0 shadow-lg" onClick={resetZoom} aria-label="Quitar el zoom">
+          <ZoomOut className="size-6" aria-hidden="true" />
+        </button>
+      )}
       {draft && (
         <div className="absolute right-3 bottom-3 flex gap-3">
           <button className="btn btn-ghost bg-paper size-14 rounded-full p-0 shadow-lg" onClick={undo} aria-label="Deshacer el trazo">
