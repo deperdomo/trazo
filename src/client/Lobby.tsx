@@ -1,8 +1,7 @@
 // Sala de espera: código para compartir, jugadores, rotulador y solicitudes de entrada.
 import { useState } from 'react';
 import { Check, Crown, Share2, WifiOff, X } from 'lucide-react';
-import { COLOR_NAMES, COLORS, MAX_PLAYERS, type View } from '../shared/game';
-import { Dot } from './ui';
+import { MAX_PLAYERS, type View } from '../shared/game';
 import type { RoomConn } from './useRoom';
 
 interface Props {
@@ -13,10 +12,8 @@ interface Props {
 
 export default function Lobby({ room, view, onLeave }: Props) {
   const [copied, setCopied] = useState(false);
-  const me = view.players.find((p) => p.id === view.you)!;
   const host = view.players.find((p) => p.id === view.hostId);
   const isHost = view.you === view.hostId;
-  const takenColors = new Set(view.players.filter((p) => p.id !== view.you).map((p) => p.color));
   const missing = view.minPlayers - view.players.length;
   const hasScores = view.players.some((p) => p.score > 0);
 
@@ -65,7 +62,6 @@ export default function Lobby({ room, view, onLeave }: Props) {
         <ul className="divide-soft divide-y">
           {view.players.map((p) => (
             <li key={p.id} className="flex min-h-12 items-center gap-3">
-              <Dot color={p.color} className="size-5" />
               <span className="min-w-0 flex-1 truncate font-semibold">
                 {p.name}
                 {p.id === view.you && <span className="text-muted font-normal"> (tú)</span>}
@@ -85,36 +81,6 @@ export default function Lobby({ room, view, onLeave }: Props) {
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="card" aria-labelledby="color-title">
-        <h2 id="color-title" className="label">
-          Tu rotulador: {COLOR_NAMES[me.color]}
-        </h2>
-        <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-labelledby="color-title">
-          {COLORS.map((hex, i) => (
-            <button
-              key={hex}
-              role="radio"
-              aria-checked={me.color === i}
-              aria-label={COLOR_NAMES[i] + (takenColors.has(i) ? ' (cogido)' : '')}
-              disabled={takenColors.has(i)}
-              onClick={() => room.send({ t: 'color', c: i })}
-              className={`grid aspect-square min-h-11 place-items-center rounded-lg disabled:cursor-not-allowed disabled:opacity-40 ${
-                me.color === i ? 'ring-ink ring-offset-paper ring-4 ring-offset-2' : ''
-              }`}
-              style={{ background: hex }}
-            >
-              {me.color === i && (
-                <span className="bg-paper text-ink grid size-7 place-items-center rounded-full">
-                  <Check className="size-5" aria-hidden="true" />
-                </span>
-              )}
-              {/* Cogido: con la X no se confunde con un tono pastel libre */}
-              {takenColors.has(i) && <X className="text-ink size-6" strokeWidth={3} aria-hidden="true" />}
-            </button>
-          ))}
-        </div>
       </section>
 
       <footer className="mt-auto flex flex-col gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">

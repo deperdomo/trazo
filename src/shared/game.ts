@@ -10,7 +10,7 @@ export const TEXT_MAX = 40; // categoría y palabra
 export const BOARD = 1000; // lado de la pizarra en unidades lógicas
 export const MAX_STROKE_POINTS = 2000;
 
-// Rotuladores: uno distinto por jugador, legibles sobre papel claro.
+// Rotuladores: el color se elige en cada trazo. Legibles sobre papel claro.
 export const COLORS = [
   '#1f2328', // negro
   '#e03131', // rojo
@@ -31,14 +31,14 @@ export interface Player {
   id: string; // público
   token: string; // secreto: identifica al navegador del jugador
   name: string;
-  color: number; // índice en COLORS
   score: number;
   connected: boolean;
 }
 
-/** Un trazo: jugador que lo hizo y puntos [x, y, presión, x, y, presión, ...]. Presión 0 = sin sensor (se simula). */
+/** Un trazo: jugador que lo hizo, color (índice en COLORS) y puntos [x, y, presión, x, y, presión, ...]. Presión 0 = sin sensor (se simula). */
 export interface Stroke {
   id: string;
+  c: number;
   pts: number[];
 }
 
@@ -141,11 +141,9 @@ export function canJoin(room: Room, name: unknown): string | undefined {
   if (room.players.some((p) => p.name.toLowerCase() === lower)) return 'Ese nombre ya está en la sala';
 }
 
-/** Añade al jugador con el primer rotulador libre. Llamar antes a canJoin. */
+/** Llamar antes a canJoin. */
 export function addPlayer(room: Room, id: string, token: string, name: string): Player {
-  const taken = new Set(room.players.map((p) => p.color));
-  const color = COLORS.findIndex((_, i) => !taken.has(i));
-  const player: Player = { id, token, name: name.trim(), color, score: 0, connected: false };
+  const player: Player = { id, token, name: name.trim(), score: 0, connected: false };
   room.players.push(player);
   return player;
 }
@@ -155,13 +153,7 @@ export function removePlayer(room: Room, id: string): string | undefined {
   room.players = room.players.filter((p) => p.id !== id);
 }
 
-export function setColor(room: Room, by: string, color: unknown): string | undefined {
-  if (room.phase !== 'lobby') return 'El color se elige en la sala de espera';
-  if (typeof color !== 'number' || !COLORS[color]) return 'Color no válido';
-  if (room.players.some((p) => p.color === color && p.id !== by)) return 'Ese color ya está cogido';
-  const me = room.players.find((p) => p.id === by);
-  if (me) me.color = color;
-}
+export const validColor = (c: unknown): c is number => typeof c === 'number' && c in COLORS;
 
 const artistsOf = (room: Room) => room.players.filter((p) => p.id !== room.qmId).map((p) => p.id);
 const isBoss = (room: Room, id: string) => id === room.qmId || id === room.hostId;
@@ -209,10 +201,10 @@ function advanceTurn(room: Room) {
   if (room.turn >= room.order.length * LAPS) room.phase = 'voting';
 }
 
-export function addStroke(room: Room, by: string, pts: unknown): string | undefined {
+export function addStroke(room: Room, by: string, pts: unknown, color: unknown): string | undefined {
   if (currentDrawer(room) !== by) return 'No es tu turno';
-  if (!validPoints(pts)) return 'Trazo no válido';
-  room.strokes.push({ id: by, pts });
+  if (!validPoints(pts) || !validColor(color)) return 'Trazo no válido';
+  room.strokes.push({ id: by, c: color, pts });
   advanceTurn(room);
 }
 
@@ -354,7 +346,7 @@ export type ServerMsg =
   | { t: 'state'; s: View }
   | { t: 'strokes'; list: Stroke[] } // dibujo completo (al entrar, al limpiar o al rechazar un trazo)
   | { t: 'stroke'; s: Stroke } // trazo terminado
-  | { t: 'pts'; id: string; p: number[] } // puntos del trazo que alguien está haciendo ahora
+  | { t: 'pts'; id: string; c: number; p: number[] } // puntos del trazo que alguien está haciendo ahora
   | { t: 'cancel' } // el trazo en curso se ha descartado
   | { t: 'pending' } // solicitud de entrada enviada al anfitrión
   | { t: 'request'; id: string; name: string } // (anfitrión) alguien pide entrar

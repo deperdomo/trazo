@@ -61,7 +61,7 @@ export function useRoom(session: Session, onExit: (msg: string, wasInside: boole
           board.commit(m.s);
           break;
         case 'pts':
-          board.addLive(m.id, m.p);
+          board.addLive(m.id, m.c, m.p);
           break;
         case 'cancel':
           board.clearLive();

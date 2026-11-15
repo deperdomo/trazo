@@ -15,7 +15,7 @@ function playing(n = 5, fake = 0, word = 'Jirafa') {
 }
 
 function drawAll(room: G.Room) {
-  while (room.phase === 'drawing') assert.equal(G.addStroke(room, G.currentDrawer(room)!, DOT), undefined);
+  while (room.phase === 'drawing') assert.equal(G.addStroke(room, G.currentDrawer(room)!, DOT, 0), undefined);
 }
 
 /** Vota cada artista a quien diga `targets` (por orden de asiento p1, p2, ...). */
@@ -32,8 +32,8 @@ test('dos vueltas de un trazo por turno, empezando por quien elige el QM', () =>
   const room = playing();
   assert.deepEqual(room.order, ['p2', 'p3', 'p4', 'p1']);
   assert.equal(room.fakeId, 'p1');
-  assert.equal(G.addStroke(room, 'p3', DOT), 'No es tu turno');
-  assert.equal(G.addStroke(room, 'p0', DOT), 'No es tu turno'); // el QM no dibuja
+  assert.equal(G.addStroke(room, 'p3', DOT, 0), 'No es tu turno');
+  assert.equal(G.addStroke(room, 'p0', DOT, 0), 'No es tu turno'); // el QM no dibuja
   assert.equal(G.addStroke(room, 'p2', [1, 2]), 'Trazo no válido');
   assert.equal(G.addStroke(room, 'p2', [1, 2, 0, 1001, 5, 0]), 'Trazo no válido');
   drawAll(room);
@@ -123,17 +123,13 @@ test('el QM rota al siguiente asiento y gana quien llega a 5 puntos', () => {
   assert.deepEqual(scores(room), { p0: 0, p1: 0, p2: 0, p3: 0, p4: 0 });
 });
 
-test('sala de espera: nombres, aforo y colores', () => {
+test('sala de espera: nombres y aforo', () => {
   const room = G.newRoom('ABC123', 'p0', 't0', 'Ana');
   assert.equal(G.canJoin(room, 'ana'), 'Ese nombre ya está en la sala');
   assert.match(G.canJoin(room, 'A')!, /entre 2 y 20/);
   assert.equal(G.startGame(room, 'p0', 5), 'Hacen falta al menos 5 jugadores');
   for (let i = 1; i < 10; i++) G.addPlayer(room, `p${i}`, `t${i}`, `Jugador ${i}`);
-  assert.equal(new Set(room.players.map((p) => p.color)).size, 10); // un rotulador distinto cada uno
   assert.equal(G.canJoin(room, 'Otro'), 'La sala está llena');
-  assert.equal(G.setColor(room, 'p1', 0), 'Ese color ya está cogido');
-  G.removePlayer(room, 'p9');
-  assert.equal(G.setColor(room, 'p1', 9), undefined);
   G.startGame(room, 'p0', 5);
   assert.equal(G.canJoin(room, 'Tarde'), 'La partida ya ha empezado');
 });

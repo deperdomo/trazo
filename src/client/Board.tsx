@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Undo2 } from 'lucide-react';
 import { getStroke } from 'perfect-freehand';
-import { BOARD, MAX_STROKE_POINTS, type Stroke } from '../shared/game';
+import { BOARD, COLORS, MAX_STROKE_POINTS, type Stroke } from '../shared/game';
 
 // Ajustes del rotulador, en unidades de pizarra (lado = 1000). Afinar probando en móvil real.
 // size: grosor (1,6 % del lado). thinning: cuánto adelgaza con la velocidad/presión (0 = grosor fijo).
@@ -12,6 +12,7 @@ const PEN = { size: 16, thinning: 0.25, smoothing: 0.5, streamline: 0.4 };
 const MIN_DIST = 1.5; // separación mínima entre puntos guardados
 const SEND_EVERY = 40; // ms entre lotes del trazo en vivo
 const PAPER = '#fffdf8';
+const DIMMED = 0.12; // opacidad de los trazos de los demás al resaltar a un jugador
 
 /** Dibujo compartido: trazos terminados y, como mucho, uno en curso (propio o de otro jugador). */
 export class BoardModel {
@@ -29,8 +30,8 @@ export class BoardModel {
     this.live = null;
     this.onChange();
   }
-  addLive(id: string, pts: number[]) {
-    if (this.live?.id !== id) this.live = { id, pts: [] };
+  addLive(id: string, c: number, pts: number[]) {
+    if (this.live?.id !== id) this.live = { id, c, pts: [] };
     this.live.pts.push(...pts);
     this.onChange();
   }
@@ -60,7 +61,8 @@ function pathOf(pts: number[], complete: boolean): Path2D {
 
 interface Props {
   model: BoardModel;
-  colors: Record<string, string>; // id de jugador -> color de su rotulador
+  color: number; // rotulador elegido para mi trazo (índice en COLORS)
+  focus: string | null; // jugador resaltado: los trazos de los demás se atenúan
   me: string;
   canDraw: boolean;
   send: (msg: object) => void;
@@ -85,7 +87,13 @@ export default function Board(props: Props) {
 
     const draw = () => {
       frame = 0;
-      const { colors } = latest.current;
+      const { focus } = latest.current;
+      const paint = (s: Stroke, path: Path2D) => {
+        ctx.globalAlpha = focus && s.id !== focus ? DIMMED : 1;
+        ctx.fillStyle = COLORS[s.c] ?? COLORS[0]; // salas guardadas antes del color por trazo
+        ctx.fill(path);
+      };
+      ctx.globalAlpha = 1;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = PAPER;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -94,13 +102,9 @@ export default function Board(props: Props) {
       for (const stroke of model.strokes) {
         let path = paths.get(stroke);
         if (!path) paths.set(stroke, (path = pathOf(stroke.pts, true)));
-        ctx.fillStyle = colors[stroke.id] ?? '#1f2328';
-        ctx.fill(path);
+        paint(stroke, path);
       }
-      if (model.live) {
-        ctx.fillStyle = colors[model.live.id] ?? '#1f2328';
-        ctx.fill(pathOf(model.live.pts, false));
-      }
+      if (model.live) paint(model.live, pathOf(model.live.pts, false));
     };
     const invalidate = () => {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -134,7 +138,7 @@ export default function Board(props: Props) {
       const pts: number[] = [];
       active = { pointer: e.pointerId, rect: canvas.getBoundingClientRect(), pts, sent: 0, lastSend: performance.now(), pen: e.pointerType === 'pen' };
       addPoint(e);
-      model.live = { id: latest.current.me, pts };
+      model.live = { id: latest.current.me, c: latest.current.color, pts };
       invalidate();
     };
     const move = (e: PointerEvent) => {
@@ -145,7 +149,7 @@ export default function Board(props: Props) {
       invalidate();
       const now = performance.now();
       if (now - active.lastSend >= SEND_EVERY && active.pts.length > active.sent) {
-        latest.current.send({ t: 'pts', p: active.pts.slice(active.sent) });
+        latest.current.send({ t: 'pts', c: latest.current.color, p: active.pts.slice(active.sent) });
         active.sent = active.pts.length;
         active.lastSend = now;
       }
@@ -153,7 +157,7 @@ export default function Board(props: Props) {
     const up = (e: PointerEvent) => {
       if (e.pointerId !== active?.pointer) return;
       // Los demás ven el trazo completo, pero no cuenta hasta que se confirma con ✓.
-      if (active.pts.length > active.sent) latest.current.send({ t: 'pts', p: active.pts.slice(active.sent) });
+      if (active.pts.length > active.sent) latest.current.send({ t: 'pts', c: latest.current.color, p: active.pts.slice(active.sent) });
       draftRef.current = active.pts;
       active = null;
       setDraft(true);
@@ -185,8 +189,11 @@ export default function Board(props: Props) {
     };
   }, [model]);
 
-  // Cambian los colores (o el turno): repintar.
-  useEffect(() => model.onChange(), [model, props.colors]);
+  // Cambia el rotulador (también recolorea mi trazo sin enviar) o el jugador resaltado: repintar.
+  useEffect(() => {
+    if (model.live?.id === props.me) model.live.c = props.color;
+    model.onChange();
+  }, [model, props.me, props.color, props.focus]);
 
   // Si el turno se acaba sin confirmar (p. ej. se cancela la ronda), el borrador desaparece.
   useEffect(() => {
@@ -198,7 +205,7 @@ export default function Board(props: Props) {
   const confirm = () => {
     if (!draftRef.current) return;
     // Se queda pintado como "en curso" hasta que el servidor lo confirma.
-    props.send({ t: 'stroke', p: draftRef.current });
+    props.send({ t: 'stroke', p: draftRef.current, c: props.color });
     draftRef.current = null;
     setDraft(false);
   };
@@ -216,7 +223,7 @@ export default function Board(props: Props) {
         role="img"
         aria-label="Pizarra compartida con el dibujo de la ronda"
         className="board border-line rounded-lg border-2 bg-white"
-        style={props.canDraw ? { borderColor: props.colors[props.me], cursor: 'crosshair' } : undefined}
+        style={props.canDraw ? { borderColor: COLORS[props.color], cursor: 'crosshair' } : undefined}
       />
       {draft && (
         <div className="absolute right-3 bottom-3 flex gap-3">

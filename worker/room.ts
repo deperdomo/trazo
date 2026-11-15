@@ -140,8 +140,8 @@ export class Room extends Server<Env> {
     // Trazo en curso: se reenvía tal cual a los demás, sin tocar el estado.
     if (m.t === 'pts' || m.t === 'cancel') {
       if (G.currentDrawer(room) !== pid) return;
-      if (m.t === 'pts' && !G.validPoints(m.p)) return;
-      const out = JSON.stringify(m.t === 'pts' ? { t: 'pts', id: pid, p: m.p } : { t: 'cancel' });
+      if (m.t === 'pts' && !(G.validPoints(m.p) && G.validColor(m.c))) return;
+      const out = JSON.stringify(m.t === 'pts' ? { t: 'pts', id: pid, c: m.c, p: m.p } : { t: 'cancel' });
       for (const c of this.conns()) if (c.state?.pid && c.id !== conn.id) c.send(out);
       return;
     }
@@ -150,13 +150,10 @@ export class Room extends Server<Env> {
     let error: string | undefined;
     switch (m.t) {
       case 'stroke':
-        error = G.addStroke(room, pid, m.p);
+        error = G.addStroke(room, pid, m.p, m.c);
         // Rechazado: se reenvía el dibujo real para que el cliente descarte el suyo.
         if (error) return send(conn, { t: 'strokes', list: room.strokes });
         this.toAll({ t: 'stroke', s: room.strokes.at(-1)! });
-        break;
-      case 'color':
-        error = G.setColor(room, pid, m.c);
         break;
       case 'start':
         error = G.startGame(room, pid, this.minPlayers);
@@ -301,8 +298,7 @@ export class Room extends Server<Env> {
   /** Historial: una fila por ronda terminada, con el dibujo. */
   private saveRound() {
     const room = this.room!;
-    const player = (id: string) => room.players.find((p) => p.id === id);
-    const name = (id: string) => player(id)?.name ?? '?';
+    const name = (id: string) => room.players.find((p) => p.id === id)?.name ?? '?';
     this.db('POST', 'trazo_rounds', {
       room_code: room.code,
       round_number: room.round,
@@ -313,9 +309,9 @@ export class Room extends Server<Env> {
       caught: room.caught,
       guess: room.guess,
       guessed: room.guessed,
-      players: room.players.map((p) => ({ name: p.name, color: G.COLORS[p.color], score: p.score })),
+      players: room.players.map((p) => ({ name: p.name, score: p.score })),
       votes: Object.entries(room.votes).map(([from, to]) => ({ from: name(from), to: name(to) })),
-      strokes: room.strokes.map((s) => ({ player: name(s.id), color: G.COLORS[player(s.id)?.color ?? 0], pts: s.pts })),
+      strokes: room.strokes.map((s) => ({ player: name(s.id), color: G.COLORS[s.c] ?? G.COLORS[0], pts: s.pts })),
     });
   }
 }

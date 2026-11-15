@@ -28,7 +28,7 @@ create table if not exists trazo_rounds (
   caught       boolean not null,          -- ¿pillaron al falso artista?
   guess        text,                      -- lo que dijo al intentar adivinar
   guessed      boolean,                   -- ¿se dio por bueno?
-  players      jsonb not null,            -- [{ name, color, score }]
+  players      jsonb not null,            -- [{ name, score }]
   votes        jsonb not null,            -- [{ from, to }]
   strokes      jsonb not null,            -- [{ player, color, pts: [x, y, presión, ...] }] sobre una pizarra de 1000x1000
   created_at   timestamptz not null default now()

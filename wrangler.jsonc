@@ -20,6 +20,19 @@
     "MIN_PLAYERS": "5",
     // URL de PostgREST en Oracle (ver infra/README.md). Vacía = se juega sin guardar datos.
     "DB_URL": "https://bd-juegos.deiviperdomo.dev"
-  }
+  },
   // Secreto: DB_KEY (wrangler secret put DB_KEY)
+
+  // Para probar antes de producción: Worker aparte (trazo-preview) en workers.dev, sin dominio propio ni BD.
+  // npm run deploy:preview
+  "env": {
+    "preview": {
+      "workers_dev": true,
+      "routes": [],
+      "durable_objects": {
+        "bindings": [{ "name": "Room", "class_name": "Room" }]
+      },
+      "vars": { "MIN_PLAYERS": "3", "DB_URL": "" }
+    }
+  }
 }

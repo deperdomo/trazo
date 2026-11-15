@@ -1,6 +1,5 @@
 // Piezas pequeñas de interfaz compartidas entre pantallas.
 import { LoaderCircle } from 'lucide-react';
-import { COLORS } from '../shared/game';
 
 export function Loading({ text }: { text: string }) {
   return (
@@ -9,11 +8,6 @@ export function Loading({ text }: { text: string }) {
       {text}
     </div>
   );
-}
-
-/** Punto con el color del rotulador de un jugador. Siempre acompaña al nombre: el color nunca es el único dato. */
-export function Dot({ color, className = 'size-3.5' }: { color: number; className?: string }) {
-  return <span className={`inline-block shrink-0 rounded-full ${className}`} style={{ background: COLORS[color] }} aria-hidden="true" />;
 }
 
 export function Toast({ text }: { text: string }) {

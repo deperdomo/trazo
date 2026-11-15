@@ -2,15 +2,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { LAPS, TEXT_MAX, type View } from '../shared/game';
 import type { PhaseProps } from './Game';
-import { Dot } from './ui';
 
 export function Who({ view, id }: { view: View; id: string }) {
   const p = view.players.find((x) => x.id === id);
   return (
-    <span className="inline-flex items-center gap-1.5 font-bold">
-      {p && <Dot color={p.color} />}
-      {p?.name ?? '?'}
-    </span>
+    <span className="font-bold">{p?.name ?? '?'}</span>
   );
 }
 

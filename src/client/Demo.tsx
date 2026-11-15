@@ -45,7 +45,7 @@ function build(scene: Scene): G.Room {
   if (scene === 'Elegir palabra') return room;
   G.setup(room, 'p0', 'Animales', 'Jirafa', 'p1', () => 0.5); // el falso artista es Dani (p3)
   const strokes = scene === 'Dibujando' ? 4 : room.order.length * G.LAPS;
-  for (let turn = 0; turn < strokes; turn++) G.addStroke(room, G.currentDrawer(room)!, points(turn));
+  for (let turn = 0; turn < strokes; turn++) G.addStroke(room, G.currentDrawer(room)!, points(turn), turn % G.COLORS.length);
   if (scene === 'Dibujando' || scene === 'Votación') return room;
   G.openVote(room, 'p0');
   for (const [from, to] of [['p1', 'p3'], ['p2', 'p3'], ['p3', 'p1'], ['p4', 'p3'], ['p5', 'p2']]) G.vote(room, from, to);
@@ -67,7 +67,7 @@ function botStep(room: G.Room, me: string, board: BoardModel): boolean {
     case 'drawing': {
       const drawer = G.currentDrawer(room)!;
       if (drawer === me) return false;
-      G.addStroke(room, drawer, points(room.turn));
+      G.addStroke(room, drawer, points(room.turn), room.turn % G.COLORS.length);
       board.commit(room.strokes.at(-1)!);
       return true;
     }
@@ -124,12 +124,9 @@ export default function Demo() {
       let error: string | undefined;
       switch (m.t) {
         case 'stroke':
-          error = G.addStroke(room, me, m.p);
+          error = G.addStroke(room, me, m.p, m.c);
           if (error) board.reset([...room.strokes]);
           else board.commit(room.strokes.at(-1)!);
-          break;
-        case 'color':
-          error = G.setColor(room, me, m.c);
           break;
         case 'start':
           error = G.startGame(room, me, MIN_PLAYERS);
