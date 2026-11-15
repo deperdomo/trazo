@@ -130,7 +130,7 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
 
       {hasBoard && (
         <div className="board-slot flex min-h-0 flex-1 items-start justify-center">
-          <Board model={room.board} color={color} focus={focus} me={view.you} canDraw={myTurn} send={send} />
+          <Board model={room.board} color={color} focus={focus} onUnfocus={() => setFocus(null)} me={view.you} canDraw={myTurn} send={send} />
         </div>
       )}
 

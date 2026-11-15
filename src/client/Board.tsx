@@ -66,6 +66,7 @@ interface Props {
   model: BoardModel;
   color: number; // rotulador elegido para mi trazo (índice en COLORS)
   focus: string | null; // jugador resaltado: los trazos de los demás se atenúan
+  onUnfocus: () => void; // toque en la pizarra: se vuelven a ver todos los trazos
   me: string;
   canDraw: boolean;
   send: (msg: object) => void;
@@ -86,14 +87,15 @@ export default function Board(props: Props) {
 
   useEffect(() => {
     const canvas = canvasRef.current!;
-    // desynchronized: pista para pintar con menos latencia donde el navegador lo soporte.
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })!;
+    // Sin `desynchronized`: al repintar la pizarra entera (zoom, desplazamiento) dejaba ver franjas negras a medio pintar.
+    const ctx = canvas.getContext('2d', { alpha: false })!;
     const paths = new WeakMap<Stroke, Path2D>();
     let frame = 0;
     let active: { pointer: number; rect: DOMRect; pts: number[]; sent: number; lastSend: number; pen: boolean } | null = null;
     // Dedos sobre la pizarra y, con dos, el pellizco: distancia y zoom al empezar, y punto de pizarra bajo el centro.
     const touches = new Map<number, { x: number; y: number }>();
     let pinch: { rect: DOMRect; dist: number; k: number; bx: number; by: number } | null = null;
+    let pinched = false; // hubo pellizco en este gesto: al levantar los dedos no cuenta como toque
 
     const draw = () => {
       frame = 0;
@@ -184,6 +186,7 @@ export default function Board(props: Props) {
             model.clearLive();
             latest.current.send({ t: 'cancel' });
           }
+          pinched = true;
           const rect = canvas.getBoundingClientRect();
           const { dist, mx, my } = pinchNow();
           const { k, ox, oy } = zoomRef.current;
@@ -202,6 +205,7 @@ export default function Board(props: Props) {
       if (!latest.current.canDraw || model.live || active || !e.isPrimary || e.button !== 0) return;
       e.preventDefault();
       canvas.setPointerCapture(e.pointerId);
+      latest.current.onUnfocus(); // se dibuja viendo todos los trazos
       const pts: number[] = [];
       active = { pointer: e.pointerId, rect: canvas.getBoundingClientRect(), pts, sent: 0, lastSend: performance.now(), pen: e.pointerType === 'pen' };
       addPoint(e);
@@ -230,8 +234,11 @@ export default function Board(props: Props) {
     /** Un dedo deja la pizarra. Con menos de dos se acaba el pellizco; el que quede no dibuja hasta volver a tocar. */
     const lift = (e: PointerEvent) => {
       if (touches.delete(e.pointerId) && touches.size < 2) pinch = null;
+      if (!touches.size) pinched = false;
     };
     const up = (e: PointerEvent) => {
+      // Toque en la pizarra (no un pellizco): deja de resaltarse a un jugador.
+      if (!pinched) latest.current.onUnfocus();
       lift(e);
       if (e.pointerId !== active?.pointer) return;
       // Los demás ven el trazo completo, pero no cuenta hasta que se confirma con ✓.
