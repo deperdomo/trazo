@@ -143,3 +143,13 @@ test('turno de un desconectado: el anfitrión puede saltarlo', () => {
   assert.equal(G.skipTurn(room, 'p0'), undefined);
   assert.equal(G.currentDrawer(room), 'p2');
 });
+
+test('se agota el tiempo: -1 punto cada vez, aunque quede en negativo, y sigue el mismo', () => {
+  const room = playing();
+  assert.equal(G.timeOut(room), undefined);
+  assert.equal(G.timeOut(room), undefined);
+  assert.equal(room.players[1].score, -2);
+  assert.equal(G.currentDrawer(room), 'p1');
+  drawAll(room);
+  assert.equal(G.timeOut(room), 'Nadie está dibujando');
+});

@@ -47,20 +47,43 @@ export function Setup({ view, send }: PhaseProps) {
   );
 }
 
+/** Segundos que le quedan al turno. Cada vista nueva trae turnLeft recién calculado: la cuenta se rehace con ella. */
+function useSecondsLeft(view: View) {
+  const [left, setLeft] = useState(0);
+  useEffect(() => {
+    const ms = view.turnLeft;
+    const end = Date.now() + ms;
+    const tick = () => setLeft(ms ? Math.max(0, Math.ceil((end - Date.now()) / 1000)) : 0);
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [view]);
+  return left;
+}
+
 export function Drawing({ view, send }: PhaseProps) {
   const drawerId = view.order[view.turn % view.order.length];
   const drawer = view.players.find((p) => p.id === drawerId);
   const lap = Math.floor(view.turn / view.order.length) + 1;
+  const left = useSecondsLeft(view);
   return (
     <div className="flex flex-col gap-2">
-      {drawerId === view.you ? (
-        <p className="text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo, y envíalo con ✓.</p>
-      ) : (
-        <p className="text-lg">
-          Dibuja <Who view={view} id={drawerId} />
-          {view.you === view.qmId && <span className="text-muted"> · tú observas</span>}
-        </p>
-      )}
+      <div className="flex items-start justify-between gap-3">
+        {drawerId === view.you ? (
+          <p className="text-xl font-black">¡Te toca! Haz un solo trazo, sin levantar el dedo, y envíalo con ✓. Si se acaba el tiempo, pierdes un punto.</p>
+        ) : (
+          <p className="text-lg">
+            Dibuja <Who view={view} id={drawerId} />
+            {view.you === view.qmId && <span className="text-muted"> · tú observas</span>}
+          </p>
+        )}
+        {view.turnLeft > 0 && drawer?.connected && (
+          // aria-live off: si no, el lector de pantalla leería cada segundo.
+          <p role="timer" aria-live="off" aria-label={`${left} segundos`} className={`shrink-0 text-3xl font-black tabular-nums ${left <= 5 ? 'text-accent' : ''}`}>
+            {left}s
+          </p>
+        )}
+      </div>
       <p className="text-muted text-sm">
         Vuelta {lap} de {LAPS} · trazo {view.turn + 1} de {view.order.length * LAPS}
       </p>

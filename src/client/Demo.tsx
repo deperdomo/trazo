@@ -110,6 +110,21 @@ export default function Demo() {
     return () => clearTimeout(id);
   }, [room, version, me, board]);
 
+  // Cuenta atrás del trazo, como clock() en worker/room.ts. Solo se nota en tu turno: los bots dibujan enseguida.
+  const turnKey = room.phase === 'drawing' ? `${room.round}:${room.turn}` : '';
+  useEffect(() => {
+    room.turnEnds = turnKey ? Date.now() + G.TURN_MS : 0;
+    refresh();
+    if (!turnKey) return;
+    const id = setInterval(() => {
+      G.timeOut(room);
+      room.turnEnds = Date.now() + G.TURN_MS;
+      setToast('Se acabó el tiempo: -1 punto');
+      refresh();
+    }, G.TURN_MS);
+    return () => clearInterval(id);
+  }, [room, turnKey]);
+
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(''), 3500);

@@ -35,6 +35,8 @@ export class Room extends Server<Env> {
   private room: G.Room | null = null;
   private dbQueue: Promise<unknown> = Promise.resolve();
   private synced = '';
+  private turnKey = '';
+  private timer?: ReturnType<typeof setTimeout>;
 
   async onStart() {
     const saved = await this.ctx.storage.get<string>('room');
@@ -118,11 +120,34 @@ export class Room extends Server<Env> {
   /** Tras cualquier cambio: snapshot local, vista personalizada a cada jugador y registro en la base de datos. */
   private changed() {
     const room = this.room!;
+    this.clock();
     this.ctx.waitUntil(this.ctx.storage.put('room', JSON.stringify(room)));
     for (const c of this.conns()) {
       if (c.state?.pid) send(c, { t: 'state', s: G.viewFor(room, c.state.pid, this.minPlayers) });
     }
     this.syncDb();
+  }
+
+  /** Cuenta atrás de cada trazo. Se rearma al cambiar de turno, al agotarse y al salir de una pausa. */
+  // ponytail: setTimeout en memoria. Si el Durable Object se reinicia, el turno en curso vuelve a empezar con 30 s.
+  private clock() {
+    const room = this.room!;
+    const key = room.phase === 'drawing' ? `${room.round}:${room.turn}` : '';
+    if (key === this.turnKey && (this.timer || !key)) return;
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = key ? setTimeout(() => this.timeUp(), G.TURN_MS) : undefined;
+    this.turnKey = key;
+    room.turnEnds = key ? Date.now() + G.TURN_MS : 0;
+  }
+
+  private timeUp() {
+    this.timer = undefined;
+    const room = this.room;
+    if (!room || room.phase !== 'drawing') return;
+    // Quien dibuja está desconectado: se pausa sin restar (el anfitrión puede saltarle). Al volver, clock() le da otros 30 s.
+    if (!room.players.find((p) => p.id === G.currentDrawer(room))?.connected) return;
+    G.timeOut(room);
+    this.changed(); // mismo turno sin temporizador: clock() le da otros 30 s
   }
 
   onMessage(conn: Conn, raw: WSMessage) {

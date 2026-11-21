@@ -9,6 +9,7 @@ export const NAME_MAX = 20;
 export const TEXT_MAX = 40; // categoría y palabra
 export const BOARD = 1000; // lado de la pizarra en unidades lógicas
 export const MAX_STROKE_POINTS = 2000;
+export const TURN_MS = 30_000; // tiempo para cada trazo; si se agota, -1 punto y vuelve a empezar (el turno lo pasa el anfitrión)
 
 // Rotuladores: el color se elige en cada trazo. Legibles sobre papel claro.
 export const COLORS = [
@@ -55,6 +56,7 @@ export interface Room {
   order: string[]; // artistas en orden de dibujo
   turn: number;
   strokes: Stroke[];
+  turnEnds: number; // fin del turno de dibujo (reloj del servidor, lo pone worker/room.ts); 0 = sin cuenta atrás
   voteOpen: boolean;
   votes: Record<string, string>; // quién vota -> a quién
   caught: boolean | null;
@@ -80,6 +82,7 @@ export interface View {
   fakeId: string | null; // el QM lo sabe siempre; el resto, cuando lo pillan o acaba la ronda
   order: string[];
   turn: number;
+  turnLeft: number; // ms que le quedan al turno (relativo: los relojes de los móviles no coinciden); 0 = sin cuenta atrás
   voteOpen: boolean;
   voted: string[];
   votes: Record<string, string> | null; // ocultos hasta el recuento
@@ -97,6 +100,7 @@ const roundReset = {
   order: [] as string[],
   turn: 0,
   strokes: [] as Stroke[],
+  turnEnds: 0,
   voteOpen: false,
   votes: {} as Record<string, string>,
   caught: null,
@@ -215,6 +219,13 @@ export function skipTurn(room: Room, by: string): string | undefined {
   advanceTurn(room);
 }
 
+/** Se agotó el tiempo del trazo: -1 punto (el marcador puede quedar en negativo). Sigue dibujando el mismo. */
+export function timeOut(room: Room): string | undefined {
+  const drawer = room.players.find((p) => p.id === currentDrawer(room));
+  if (!drawer) return 'Nadie está dibujando';
+  drawer.score--;
+}
+
 export function openVote(room: Room, by: string): string | undefined {
   if (room.phase !== 'voting' || room.voteOpen) return 'Ahora no se puede abrir la votación';
   if (!isBoss(room, by)) return 'La cuenta atrás la da el QM';
@@ -328,6 +339,7 @@ export function viewFor(room: Room, you: string, minPlayers: number): View {
     fakeId: tallied || (playing && you === room.qmId) ? room.fakeId : null,
     order: room.order,
     turn: room.turn,
+    turnLeft: room.turnEnds ? Math.max(0, room.turnEnds - Date.now()) : 0,
     voteOpen: room.voteOpen,
     voted: Object.keys(room.votes),
     votes: tallied ? room.votes : null,
