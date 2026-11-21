@@ -184,7 +184,7 @@ export class Room extends Server<Env> {
         error = G.startGame(room, pid, this.minPlayers);
         break;
       case 'setup':
-        error = G.setup(room, pid, m.category, m.word, random);
+        error = G.setup(room, pid, m.word, random);
         break;
       case 'skip':
         error = G.skipTurn(room, pid);
@@ -327,7 +327,7 @@ export class Room extends Server<Env> {
     this.db('POST', 'trazo_rounds', {
       room_code: room.code,
       round_number: room.round,
-      category: room.category,
+      category: '', // ponytail: ya no hay categoría; la columna sigue en la BD (not null) para no migrar
       word: room.word,
       qm_name: name(room.qmId),
       fake_name: name(room.fakeId),

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Check, Crown, Share2, WifiOff, X } from 'lucide-react';
 import { MAX_PLAYERS, type View } from '../shared/game';
+import { pts } from './ui';
 import type { RoomConn } from './useRoom';
 
 interface Props {
@@ -15,7 +16,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
   const host = view.players.find((p) => p.id === view.hostId);
   const isHost = view.you === view.hostId;
   const missing = view.minPlayers - view.players.length;
-  const hasScores = view.players.some((p) => p.score > 0);
+  const hasScores = view.players.some((p) => p.score !== 0);
 
   const share = async () => {
     const url = `${location.origin}/?sala=${view.code}`;
@@ -66,7 +67,7 @@ export default function Lobby({ room, view, onLeave }: Props) {
                 {p.name}
                 {p.id === view.you && <span className="text-muted font-normal"> (tú)</span>}
               </span>
-              {hasScores && <span className="text-muted text-sm tabular-nums">{p.score} pts</span>}
+              {hasScores && <span className="text-muted text-sm tabular-nums">{pts(p.score)} pts</span>}
               {!p.connected && <WifiOff className="text-muted size-4" aria-label="Desconectado" />}
               {p.id === view.hostId && <Crown className="text-accent size-5" aria-label="Anfitrión" />}
               {isHost && p.id !== view.you && (

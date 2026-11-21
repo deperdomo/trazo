@@ -10,32 +10,25 @@ export function Who({ view, id }: { view: View; id: string }) {
   );
 }
 
-/** El QM elige categoría y palabra. El resto espera. */
+/** El QM elige la palabra. El resto espera. */
 export function Setup({ view, send }: PhaseProps) {
-  const [category, setCategory] = useState('');
   const [word, setWord] = useState('');
 
   if (view.you !== view.qmId) {
     return (
       <p>
-        Esta ronda <Who view={view} id={view.qmId} /> es el QM: elige la categoría y la palabra, y no dibuja. En cuanto
+        Esta ronda <Who view={view} id={view.qmId} /> es el QM: elige la palabra y no dibuja. En cuanto
         termine, recibirás tu carta.
       </p>
     );
   }
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    send({ t: 'setup', category, word });
+    send({ t: 'setup', word });
   };
   return (
     <form className="flex flex-col gap-3" onSubmit={submit}>
       <p className="font-bold">Eres el QM de esta ronda. Tú no dibujas: eliges qué se dibuja.</p>
-      <div>
-        <label className="label" htmlFor="category">
-          Categoría (la verán todos)
-        </label>
-        <input id="category" className="input" value={category} onChange={(e) => setCategory(e.target.value)} maxLength={TEXT_MAX} placeholder="Animales" required autoComplete="off" />
-      </div>
       <div>
         <label className="label" htmlFor="word">
           Palabra secreta (todos menos el falso artista)

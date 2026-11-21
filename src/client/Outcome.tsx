@@ -4,6 +4,7 @@ import { Trophy } from 'lucide-react';
 import { TEXT_MAX, WIN_SCORE, type View } from '../shared/game';
 import type { PhaseProps } from './Game';
 import { Who } from './Phases';
+import { pts } from './ui';
 
 function Tally({ view }: { view: View }) {
   const votes = Object.values(view.votes ?? {});
@@ -108,8 +109,8 @@ export function Result({ view, send }: PhaseProps) {
             <li key={p.id} className="flex items-center justify-between gap-2">
               <Who view={view} id={p.id} />
               <span className="tabular-nums">
-                {view.deltas[p.id] ? <span className="text-ok mr-2 font-bold">+{view.deltas[p.id]}</span> : null}
-                <strong>{p.score}</strong>
+                {view.deltas[p.id] ? <span className="text-ok mr-2 font-bold">+{pts(view.deltas[p.id])}</span> : null}
+                <strong>{pts(p.score)}</strong>
               </span>
             </li>
           ))}

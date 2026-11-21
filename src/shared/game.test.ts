@@ -10,7 +10,7 @@ function playing(n = 5, fake = 0, word = 'Jirafa') {
   const room = G.newRoom('ABC123', 'p0', 't0', 'Jugador 0');
   for (let i = 1; i < n; i++) G.addPlayer(room, `p${i}`, `t${i}`, `Jugador ${i}`);
   assert.equal(G.startGame(room, 'p0', 5), undefined);
-  assert.equal(G.setup(room, 'p0', 'Animales', word, () => fake / (n - 1)), undefined);
+  assert.equal(G.setup(room, 'p0', word, () => fake / (n - 1)), undefined);
   return room;
 }
 
@@ -60,7 +60,7 @@ test('nadie ve secretos que no le tocan', () => {
   assert.deepEqual(view('p3').voted, ['p2']);
 });
 
-test('pillado y falla: cada artista (no el falso ni el QM) gana 1 punto', () => {
+test('pillado y falla: cada artista gana 1 punto, y 1,5 quien votó al falso artista', () => {
   const room = playing();
   voteAll(room, ['p2', 'p1', 'p1', 'p1']);
   assert.equal(room.caught, true);
@@ -71,24 +71,24 @@ test('pillado y falla: cada artista (no el falso ni el QM) gana 1 punto', () => 
   assert.equal(G.viewFor(room, 'p1', 5).word, 'Jirafa'); // ya no puede cambiar el intento
   assert.equal(G.submitGuess(room, 'p1', 'Jirafa'), 'Ahora no se puede adivinar'); // un solo intento
   assert.equal(G.judge(room, 'p0', false), undefined);
-  assert.deepEqual(scores(room), { p0: 0, p1: 0, p2: 1, p3: 1, p4: 1 });
+  assert.deepEqual(scores(room), { p0: 0, p1: 0, p2: 1.5, p3: 1.5, p4: 1.5 }); // p1 (falso) votó a p2
 });
 
-test('pillado pero acierta (sin mayúsculas ni tildes): falso artista y QM ganan 2', () => {
+test('pillado pero acierta (sin mayúsculas ni tildes): falso artista y QM ganan 2; quien le votó, 0,5', () => {
   const room = playing(5, 0, 'Camión');
   voteAll(room, ['p2', 'p1', 'p1', 'p1']);
   assert.equal(G.submitGuess(room, 'p1', '  camion '), undefined);
   assert.equal(room.guessed, true);
   assert.equal(room.phase, 'result');
-  assert.deepEqual(scores(room), { p0: 2, p1: 2, p2: 0, p3: 0, p4: 0 });
+  assert.deepEqual(scores(room), { p0: 2, p1: 2, p2: 0.5, p3: 0.5, p4: 0.5 });
 });
 
-test('empate en el máximo de votos: no pillado, falso artista y QM ganan 2', () => {
+test('empate en el máximo de votos: no pillado, falso artista y QM ganan 2; quien le votó, 0,5', () => {
   const room = playing();
   voteAll(room, ['p2', 'p1', 'p1', 'p2']); // p1: 2 votos, p2: 2 votos
   assert.equal(room.caught, false);
   assert.equal(room.phase, 'result');
-  assert.deepEqual(scores(room), { p0: 2, p1: 2, p2: 0, p3: 0, p4: 0 });
+  assert.deepEqual(scores(room), { p0: 2, p1: 2, p2: 0.5, p3: 0.5, p4: 0 });
   assert.equal(G.isCaught({ a: 'f', b: 'f', c: 'x' }, 'f'), true);
   assert.equal(G.isCaught({ a: 'x', b: 'x', c: 'f' }, 'f'), false);
   assert.equal(G.isCaught({}, 'f'), false);
@@ -96,7 +96,7 @@ test('empate en el máximo de votos: no pillado, falso artista y QM ganan 2', ()
 
 test('el QM rota al siguiente asiento y gana quien llega a 5 puntos', () => {
   const room = playing();
-  voteAll(room, ['p2', 'p1', 'p1', 'p2']); // ronda 1: p0 (QM) y p1 (falso) +2
+  voteAll(room, ['p2', 'p1', 'p1', 'p2']); // ronda 1: p0 (QM) y p1 (falso) +2; p2 y p3 +0,5
   assert.equal(G.nextRound(room, 'p3'), 'Solo el QM o el anfitrión pueden continuar');
   assert.equal(G.nextRound(room, 'p0'), undefined);
   assert.equal(room.qmId, 'p1');
@@ -104,17 +104,17 @@ test('el QM rota al siguiente asiento y gana quien llega a 5 puntos', () => {
   assert.equal(room.strokes.length, 0);
 
   // Ronda 2: QM p1, falso p0, no pillado -> p0: 4, p1: 4
-  assert.equal(G.setup(room, 'p1', 'Frutas', 'Pera', () => 0), undefined);
+  assert.equal(G.setup(room, 'p1', 'Pera', () => 0), undefined);
   assert.equal(room.fakeId, 'p0');
   voteAll(room, ['p2', 'p0', 'p0', 'p2']);
   assert.deepEqual(room.winners, []);
   G.nextRound(room, 'p1');
   assert.equal(room.qmId, 'p2');
 
-  // Ronda 3: QM p2, falso p0, no pillado -> p0: 6 gana
-  G.setup(room, 'p2', 'Frutas', 'Uva', () => 0);
+  // Ronda 3: QM p2, falso p0, no pillado -> p0: 6 gana (los medios puntos son de votar al falso)
+  G.setup(room, 'p2', 'Uva', () => 0);
   voteAll(room, ['p1', 'p0', 'p0', 'p1']);
-  assert.deepEqual(scores(room), { p0: 6, p1: 4, p2: 2, p3: 0, p4: 0 });
+  assert.deepEqual(scores(room), { p0: 6, p1: 4.5, p2: 3, p3: 1.5, p4: 0 });
   assert.deepEqual(room.winners, ['p0']);
 
   // Nueva partida: sala de espera con los puntos a cero

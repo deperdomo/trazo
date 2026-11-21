@@ -1,10 +1,11 @@
-// Pantalla de partida: cabecera con la categoría y tu carta, jugadores, pizarra y el panel de la fase actual.
+// Pantalla de partida: cabecera con la ronda y tu carta, jugadores, pizarra y el panel de la fase actual.
 import { useEffect, useState } from 'react';
 import { Eye, WifiOff } from 'lucide-react';
 import { COLOR_NAMES, COLORS, type View } from '../shared/game';
 import Board from './Board';
 import { Guess, Result } from './Outcome';
 import { Drawing, Setup, Voting } from './Phases';
+import { pts } from './ui';
 import type { RoomConn } from './useRoom';
 
 export interface PhaseProps {
@@ -67,7 +68,7 @@ function PlayerStrip(props: { view: View; drawerId: string | null; focus: string
             {p.id === view.qmId && <span className="bg-desk text-ink rounded px-1 text-xs font-bold">QM</span>}
             {!p.connected && <WifiOff className="size-3.5" aria-label="desconectado" />}
             <span className="text-muted tabular-nums">
-              {p.score}
+              {pts(p.score)}
               <span className="sr-only"> puntos{p.id === drawerId ? ', dibujando' : ''}</span>
             </span>
           </button>
@@ -119,10 +120,7 @@ export default function Game({ room, view }: { room: RoomConn; view: View }) {
       className={`mx-auto flex max-w-xl flex-col gap-2 px-2 pt-2 ${hasBoard ? 'h-dvh' : 'min-h-dvh pb-[max(0.5rem,env(safe-area-inset-bottom))]'}`}
     >
       <header className="flex items-start justify-between gap-2 px-1">
-        <div className="min-w-0">
-          {view.category && <p className="text-muted text-sm">Categoría</p>}
-          <h1 className="truncate text-xl font-black">{view.category || 'Preparando la ronda'}</h1>
-        </div>
+        <h1 className="min-w-0 truncate text-xl font-black">{view.phase === 'setup' ? 'Preparando la ronda' : `Ronda ${view.round}`}</h1>
         {view.card && <CardPeek view={view} />}
       </header>
 

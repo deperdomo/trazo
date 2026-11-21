@@ -6,7 +6,8 @@ export const MAX_PLAYERS = 10;
 export const WIN_SCORE = 5;
 export const LAPS = 2; // vueltas de trazos por ronda
 export const NAME_MAX = 20;
-export const TEXT_MAX = 40; // categoría y palabra
+export const TEXT_MAX = 40; // palabra secreta e intento del falso artista
+export const VOTE_BONUS = 0.5; // por votar al falso artista, gane quien gane la ronda
 export const BOARD = 1000; // lado de la pizarra en unidades lógicas
 export const MAX_STROKE_POINTS = 2000;
 export const TURN_MS = 30_000; // tiempo para cada trazo; si se agota, -1 punto y vuelve a empezar (el turno lo pasa el anfitrión)
@@ -50,7 +51,6 @@ export interface Room {
   phase: Phase;
   round: number;
   qmId: string;
-  category: string;
   word: string;
   fakeId: string;
   order: string[]; // artistas en orden de dibujo
@@ -76,7 +76,6 @@ export interface View {
   phase: Phase;
   round: number;
   qmId: string;
-  category: string;
   card: string | null; // tu carta: la palabra, o "X" si eres el falso artista
   word: string | null; // la palabra, cuando ya es pública
   fakeId: string | null; // el QM lo sabe siempre; el resto, cuando lo pillan o acaba la ronda
@@ -94,7 +93,6 @@ export interface View {
 }
 
 const roundReset = {
-  category: '',
   word: '',
   fakeId: '',
   order: [] as string[],
@@ -173,21 +171,13 @@ export function startGame(room: Room, by: string, minPlayers: number): string | 
   room.phase = 'setup';
 }
 
-/** El QM elige categoría y palabra. `rand` sortea al falso artista y quién hace el primer trazo. */
-export function setup(
-  room: Room,
-  by: string,
-  category: unknown,
-  word: unknown,
-  rand: () => number,
-): string | undefined {
+/** El QM elige la palabra (sin categoría: el falso artista no tiene ninguna pista). `rand` sortea al falso artista y quién hace el primer trazo. */
+export function setup(room: Room, by: string, word: unknown, rand: () => number): string | undefined {
   if (room.phase !== 'setup') return 'Ahora no toca elegir palabra';
   if (by !== room.qmId) return 'Solo el QM elige la palabra';
-  const c = cleanText(category);
   const w = cleanText(word);
-  if (!c || !w) return `Categoría y palabra: entre 1 y ${TEXT_MAX} caracteres`;
+  if (!w) return `La palabra debe tener entre 1 y ${TEXT_MAX} caracteres`;
   const artists = artistsOf(room);
-  room.category = c;
   room.word = w;
   room.fakeId = artists[Math.floor(rand() * artists.length)];
   const first = Math.floor(rand() * artists.length);
@@ -284,9 +274,13 @@ export function judge(room: Room, by: string, ok: unknown): string | undefined {
 }
 
 function score(room: Room, fakeWins: boolean) {
-  room.deltas = fakeWins
+  const deltas: Record<string, number> = fakeWins
     ? { [room.fakeId]: 2, [room.qmId]: 2 }
     : Object.fromEntries(room.order.filter((id) => id !== room.fakeId).map((id) => [id, 1]));
+  for (const [from, to] of Object.entries(room.votes)) {
+    if (to === room.fakeId) deltas[from] = (deltas[from] ?? 0) + VOTE_BONUS;
+  }
+  room.deltas = deltas;
   for (const p of room.players) p.score += room.deltas[p.id] ?? 0;
   room.winners = room.players.filter((p) => p.score >= WIN_SCORE).map((p) => p.id);
   room.phase = 'result';
@@ -333,7 +327,6 @@ export function viewFor(room: Room, you: string, minPlayers: number): View {
     phase: room.phase,
     round: room.round,
     qmId: room.qmId,
-    category: room.category,
     card: playing ? (you === room.fakeId ? 'X' : room.word) : null,
     word: revealed ? room.word : null,
     fakeId: tallied || (playing && you === room.qmId) ? room.fakeId : null,

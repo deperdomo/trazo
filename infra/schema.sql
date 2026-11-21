@@ -21,7 +21,7 @@ create table if not exists trazo_rounds (
   id           bigint generated always as identity primary key,
   room_code    text not null,
   round_number int  not null,
-  category     text not null,
+  category     text not null,             -- ya no se usa: siempre ''
   word         text not null,
   qm_name      text not null,
   fake_name    text not null,

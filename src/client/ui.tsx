@@ -1,6 +1,9 @@
 // Piezas pequeñas de interfaz compartidas entre pantallas.
 import { LoaderCircle } from 'lucide-react';
 
+/** Puntos con coma decimal: 1,5. */
+export const pts = (n: number) => n.toLocaleString('es-ES');
+
 export function Loading({ text }: { text: string }) {
   return (
     <div className="text-muted flex min-h-40 items-center justify-center gap-2 p-6" role="status">
